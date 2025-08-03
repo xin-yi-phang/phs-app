@@ -20,8 +20,6 @@ const YesNo = [
   { label: 'No', value: 'No' },
 ]
 
-//Value declared but never used - comment out first (so it doesn't fail CICD checks)
-/*
 const VisualAcuityValues = [
   { label: 'CF2M', value: 'CF2M' },
   { label: 'CF1M', value: 'CF1M' },
@@ -30,7 +28,6 @@ const VisualAcuityValues = [
   { label: 'NLP', value: 'NLP' },
   { label: 'NIL', value: 'NIL' },
 ]
-  */
 
 const formOptions = {
   OphthalQ1: YesNo,
@@ -130,7 +127,7 @@ const OphthalForm = () => {
         }, 80)
       }}
     >
-      {({ errors, submitCount }) => (
+      {({ values, setFieldValue, handleSubmit, errors, submitCount }) => (
         <Paper elevation={2} p={0} m={0}>
           <Grid display='flex' flexDirection='row'>
             <Grid xs={9}>
