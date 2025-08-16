@@ -2,20 +2,21 @@ import React from 'react'
 import mongoDB, { getName, isAdmin, getClinicSlotsCollection } from '../services/mongoDB'
 import { jsPDF } from 'jspdf'
 import { autoTable } from 'jspdf-autotable'
-import updatedLogo from 'src/icons/UpdatedIcon'
-import { bloodpressureQR, bmiQR } from 'src/icons/QRCodes'
+
+import updatedLogo from 'src/icons/UpdatedIcon';
+import { bloodpressureQR, bmiQR, tempQR } from 'src/icons/QRCodes'
+
 //import 'jspdf-autotable'
 import { parseFromLangKey, setLang, setLangUpdated } from './langutil'
 import { updateAllStationCounts } from '../services/stationCounts'
 import pdfMake from 'pdfmake/build/pdfmake'
 import pdfFonts from 'pdfmake/build/vfs_fonts'
-import axios from 'axios'
+
 import { getSavedData, getSavedPatientData, addToFormAQueue } from '../services/mongoDB'
+
 
 import pic1 from '../icons/pic1-forma';
 import pic2 from '../icons/pic2-forma';
-import pic3 from '../icons/pic3-forma';
-import pic4 from '../icons/pic4-forma';
 import { checkedBox, uncheckedBox } from '../icons/checked';
 import allForms from '../forms/forms.json';
 import { getEligibilityRows } from '../services/stationCounts';
@@ -25,6 +26,21 @@ import { mandarinNormal } from './lang/mandarin-normal'
 import { mandarinBold } from './lang/mandarin-bold'
 
 pdfMake.vfs = pdfFonts.vfs
+
+pdfMake.fonts = {
+  Roboto: {
+    normal: 'Roboto-Regular.ttf',
+    bold: 'Roboto-Regular.ttf',
+    italics: 'Roboto-Regular.ttf',
+    bolditalics: 'Roboto-Regular.ttf'
+  },
+  fangzhen: {
+    normal: 'fzhei-jt.ttf',
+    bold: 'fzhei-jt.ttf',
+    italics: 'fzhei-jt.ttf',
+    bolditalics: 'fzhei-jt.ttf'
+  }
+};
 
 export async function preRegister(preRegArgs) {
   let gender = preRegArgs.gender
@@ -224,81 +240,6 @@ export async function submitPreRegForm(args, patientId, formCollection) {
   } catch (e) {
     return { result: false, error: e }
   }
-}
-
-// Provides general information about the kinds of forms that are supported
-export async function getFormInfo() {
-  try {
-    var response = await axios.get(`/api/forms/info`)
-  } catch (err) {
-    // TODO: more granular error handling
-    return { result: false, error: err }
-  }
-  return { result: true, data: response.data.data }
-}
-
-// retrieve completion status of all forms. green for completed, red for not complete, and amber for incomplete
-export async function getFormStatus(userID) {
-  userID = parseInt(userID)
-  if (Number.isNaN(userID)) {
-    return { result: false, error: 'User ID cannot be undefined.' }
-  }
-  try {
-    var response = await axios.get(`/api/users/${userID}/status`)
-  } catch (err) {
-    // TODO: more granular error handling
-    return { result: false, error: err }
-  }
-  return { result: true, data: response.data }
-}
-
-// retrieve specific form data
-export async function getIndividualFormData(userID, form) {
-  userID = parseInt(userID)
-  if (Number.isNaN(userID)) {
-    return { result: false, error: 'User ID cannot be undefined.' }
-  }
-  // TODO: use getFormInfo() to validate form name
-  try {
-    var response = await axios.get(`/api/users/${userID}/forms/${form}`)
-  } catch (err) {
-    // TODO: more granular error handling
-    return { result: false, error: err }
-  }
-  return { result: true, data: response.data }
-}
-
-// retrieve all form data
-export async function getAllFormData(userID) {
-  userID = parseInt(userID)
-  if (Number.isNaN(userID)) {
-    return { result: false, error: 'User ID cannot be undefined.' }
-  }
-  try {
-    var response = await axios.get(`/api/users/${userID}/forms`)
-  } catch (err) {
-    // TODO: more granular error handling
-    return { result: false, error: err }
-  }
-  return { result: true, data: response.data }
-}
-
-// update or insert (upsert) data for a specified form
-export async function upsertIndividualFormData(userID, form_name, form_data) {
-  userID = parseInt(userID)
-  if (Number.isNaN(userID)) {
-    return { result: false, error: 'User ID cannot be undefined.' }
-  }
-  // TODO: use getFormInfo() to validate form name.
-  try {
-    var response = await axios.post(`/api/users/${userID}/forms/${form_name}`, {
-      form_data: JSON.stringify(form_data),
-    })
-  } catch (err) {
-    // TODO: more granular error handling
-    return { result: false, error: err }
-  }
-  return { result: true, data: response.data }
 }
 
 // Calcuates the BMI
@@ -567,9 +508,9 @@ export function patient(doc, reg, patients, k) {
   // Thanks note
   var thanksNote = doc.splitTextToSize(
     kNewlines((k = k + 2)) +
-      parseFromLangKey('dear', salutation, patients.initials) +
-      '\n' +
-      parseFromLangKey('intro'),
+    parseFromLangKey('dear', salutation, patients.initials) +
+    '\n' +
+    parseFromLangKey('intro'),
     190,
   )
   doc.text(10, 10, thanksNote)
@@ -693,11 +634,11 @@ export function addBloodPressure(doc, triage, k) {
     10,
     10,
     kNewlines((k = k + 1)) +
-      parseFromLangKey('bp_reading') +
-      triage.triageQ7 +
-      '/' +
-      triage.triageQ8 +
-      ' mmHg.',
+    parseFromLangKey('bp_reading') +
+    triage.triageQ7 +
+    '/' +
+    triage.triageQ8 +
+    ' mmHg.',
   )
 
   doc.addImage(bloodpressureQR, 'png', 165, 75, 32, 32)
@@ -1138,20 +1079,26 @@ export function generate_pdf_updated(
   geriOtConsult,
   mental,
   social,
+  podiatry,
+  mammobus,
+  hpv,
 ) {
+  console.log("TRIAGE", triage);
   setLangUpdated(reg.registrationQ14)
   let content = []
 
   content.push(...patientSection(reg, patients))
+  content.push(...temperatureSection(triage))
   content.push(...bloodPressureSection(triage))
-  content.push(...bmiSection(triage.triageQ10, triage.triageQ11))
-  content.push(...otherScreeningModularitiesSection(lung, geriVision, social))
+  content.push(...bmiSection(triage.triageQ10, triage.triageQ11, triage.triageQ12))
+  content.push(...otherScreeningModularitiesSection(reg, geriVision, podiatry, vaccine))
   //content.push({ text: '', pageBreak: 'before' })
   content.push(
     ...followUpSection(
       reg,
       vaccine,
       hsg,
+      lung,
       phlebotomy,
       fit,
       wce,
@@ -1160,9 +1107,12 @@ export function generate_pdf_updated(
       hearts,
       oralHealth,
       mental,
+      mammobus,
+      hpv,
+      socialService,
     ),
   )
-  content.push(...memoSection(geriAudiometry, dietitiansConsult, geriPtConsult, geriOtConsult))
+  content.push(...memoSection(geriAudiometry, dietitiansConsult, geriPtConsult, geriOtConsult, doctorSConsult))
   content.push(...recommendationSection())
 
   let fileName = 'Report.pdf'
@@ -1170,41 +1120,68 @@ export function generate_pdf_updated(
     fileName = patients.initials.split(' ').join('_') + '_Report.pdf'
   }
 
-  const docDefinition = {
+  pdfMake.fonts = {
+    // download default Roboto font from cdnjs.com
+    Roboto: {
+      normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+      bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
+      italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
+      bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf'
+    },
+
+    NotoTamil: {
+      normal: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansTamil-Regular.ttf',
+      bold: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansTamil-Bold.ttf',
+      italics: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansTamil-Regular.ttf',
+      bolditalics: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansTamil-Regular.ttf',
+    },
+
+    // example of usage fonts in collection
+    PingFangSC: {
+      normal: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansSC-Regular.ttf',
+      bold: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansSC-Bold.ttf',
+      italics: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansSC-Regular.ttf',
+      bolditalics: 'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansSC-Regular.ttf',
+    },
+  }
+
+  const docDefinition1 = {
     content: content,
     styles: {
       header: {
-        // font: 'NotoSansSC',
+        font: (reg.registrationQ14.toLowerCase() === 'tamil' ? 'NotoTamil' : (reg.registrationQ14.toLowerCase() === 'mandarin' ? 'PingFangSC' : 'Roboto')),
         fontSize: 16,
         bold: true,
         margin: [0, 10, 0, 5],
       },
       subheader: {
-        //  font: 'NotoSansSC',
+        font: (reg.registrationQ14.toLowerCase() === 'tamil' ? 'NotoTamil' : (reg.registrationQ14.toLowerCase() === 'mandarin' ? 'PingFangSC' : 'Roboto')),
         fontSize: 13,
         bold: true,
         margin: [0, 3, 0, 3],
       },
       normal: {
-        //    font: 'NotoSansSC',
+        font: (reg.registrationQ14.toLowerCase() === 'tamil' ? 'NotoTamil' : (reg.registrationQ14.toLowerCase() === 'mandarin' ? 'PingFangSC' : 'Roboto')),
         fontSize: 10,
         margin: [0, 0, 0, 4],
       },
       italicSmall: {
-        //     font: 'NotoSansSC',
+        font: (reg.registrationQ14.toLowerCase() === 'tamil' ? 'NotoTamil' : (reg.registrationQ14.toLowerCase() === 'mandarin' ? 'PingFangSC' : 'Roboto')),
         italics: true,
         fontSize: 10,
       },
     },
     defaultStyle: {
-      //   font: 'NotoSansSC',
+      font: (reg.registrationQ14.toLowerCase() === 'tamil' ? 'NotoTamil' : (reg.registrationQ14.toLowerCase() === 'mandarin' ? 'PingFangSC' : 'Roboto')),
       fontSize: 11,
     },
     pageMargins: [40, 60, 40, 60],
   }
 
-  pdfMake.createPdf(docDefinition).download(fileName)
+  pdfMake.createPdf(docDefinition1).download(fileName)
+
 }
+
 
 function patientSection(reg, patients) {
   const salutation = reg.registrationQ1 || 'Dear'
@@ -1217,12 +1194,46 @@ function patientSection(reg, patients) {
   const title = [{ text: parseFromLangKey('title'), style: 'header' }]
 
   const thanksNote = [
-    { text: `${parseFromLangKey('dear', salutation, patients.initials)}`, style: 'normal' },
+    { text: `${parseFromLangKey('dear', salutation, reg.registrationQ2)}`, style: 'normal' },
     { text: `${parseFromLangKey('intro')}`, style: 'normal' },
   ]
 
   return [mainLogo, ...title, ...thanksNote]
 }
+
+export function temperatureSection(triage) {
+  const textSection = [
+    { text: `${parseFromLangKey('temp_title')}`, style: 'subheader' },
+    {
+      text: `${parseFromLangKey('temp_reading')} ${triage.triageQ14} °C.\n`,
+      style: 'normal',
+    },
+    {
+      text: `${parseFromLangKey('temp_tip')}`,
+      style: 'normal'
+    },
+  ]
+
+  const imageSection = [
+    {
+      image: tempQR,
+      width: 60,
+      margin: [0, 0, 0, 5],
+    },
+  ]
+
+  return [
+    {
+      columns: [
+        { width: '*', stack: textSection },
+        { width: 'auto', stack: imageSection, alignment: 'right' },
+      ],
+      columnGap: 13,
+      margin: [0, 10, 0, 10],
+    },
+  ]
+}
+
 
 export function bloodPressureSection(triage) {
   const textSection = [
@@ -1261,7 +1272,7 @@ export function bloodPressureSection(triage) {
   ]
 }
 
-export function bmiSection(height, weight) {
+export function bmiSection(height, weight, bmiString) {
   const bmi = calculateBMI(Number(height), Number(weight))
 
   const imageSection = [
@@ -1270,19 +1281,19 @@ export function bmiSection(height, weight) {
       width: 60,
       margin: [0, 0, 0, 5],
     },
-    {
-      text: 'https://www.healthhub.sg/live-healthy/weight_putting_me_at_risk_of_health_problems',
-      style: 'italicSmall',
-      fontSize: 7,
-      color: 'blue',
-      link: 'https://www.healthhub.sg/live-healthy/weight_putting_me_at_risk_of_health_problems',
-    },
+    // {
+    //   text: 'https://www.healthhub.sg/live-healthy/weight_putting_me_at_risk_of_health_problems',
+    //   style: 'italicSmall',
+    //   fontSize: 7,
+    //   color: 'blue',
+    //   link: 'https://www.healthhub.sg/live-healthy/weight_putting_me_at_risk_of_health_problems',
+    // },
   ]
 
   return [
     { text: parseFromLangKey('bmi_title'), style: 'subheader' },
     {
-      text: parseFromLangKey('bmi_reading', height, weight, bmi.toString()),
+      text: parseFromLangKey('bmi_reading', height, weight, bmiString),
       style: 'normal',
     },
 
@@ -1318,109 +1329,75 @@ export function bmiSection(height, weight) {
   ]
 }
 
-export function otherScreeningModularitiesSection(lung, eye, social) {
-  let other_lung_smoking_text = ''
-
-  if (social.SOCIAL10) {
-    other_lung_smoking_text = parseFromLangKey('other_lung_smoking')
-  }
+export function otherScreeningModularitiesSection(reg, eye, podiatry, vaccine) {
 
   return [
     { text: parseFromLangKey('other_title'), style: 'subheader' },
-    //{ text: parseFromLangKey('other_lung'), style: 'normal' },
-
-    // {
-    //   columns: [
-    //     {
-    //       style: 'tableExample',
-    //       margin: [0, 5, 0, 5],
-    //       table: {
-    //         widths: ['*', '*'],
-    //         body: [
-    //           [
-    //             {
-    //               text: parseFromLangKey('other_lung_tbl_l_header'),
-    //               style: 'tableHeader',
-    //               bold: true,
-    //               colSpan: 2, // <-- span across 2 columns
-    //             },
-    //             {},
-    //           ],
-    //           ['FVC (L)', `${lung.LUNG3}`],
-    //           ['FEV1 (L)', `${lung.LUNG4}`],
-    //           ['FVC (%pred)', `${lung.LUNG5}`],
-    //           ['FEV1 (%pred)', `${lung.LUNG6}`],
-    //           ['FEV1/FVC (%)', `${lung.LUNG7}`],
-    //         ],
-    //       },
-    //       layout: {
-    //         hLineWidth: () => 0.5,
-    //         vLineWidth: () => 0.5,
-    //         hLineColor: () => 'black',
-    //         vLineColor: () => 'black',
-    //       },
-    //     },
-    //     {
-    //       width: '*', // takes remaining space
-    //       text: '', // or you can add other content here or leave blank
-    //     },
-    //   ],
-    // },
-
-    //{ text: `${other_lung_smoking_text}\n`, style: 'normal' },
-    //{ text: '', margin: [0, 5] },
-
     { text: `${parseFromLangKey('other_eye')}\n`, style: 'normal' },
-    {
-      columns: [
-        {
-          width: '70%',
-          style: 'tableExample',
-          margin: [0, 5, 0, 5],
-          table: {
-            widths: ['*', '*', '*'],
-            body: [
-              [
-                { text: '', style: 'tableHeader' },
-                {
-                  text: parseFromLangKey('other_eye_tbl_l_header'),
-                  style: 'tableHeader',
-                  bold: true,
-                },
-                {
-                  text: parseFromLangKey('other_eye_tbl_r_header'),
-                  style: 'tableHeader',
-                  bold: true,
-                },
+    ...(reg?.registrationQ4 >= 60
+      ? [{
+        columns: [
+          {
+            width: '70%',
+            style: 'tableExample',
+            margin: [0, 5, 0, 5],
+            table: {
+              widths: ['*', '*', '*'],
+              body: [
+                [
+                  { text: '', style: 'tableHeader' },
+                  {
+                    text: parseFromLangKey('other_eye_tbl_l_header'),
+                    style: 'tableHeader',
+                    bold: true,
+                  },
+                  {
+                    text: parseFromLangKey('other_eye_tbl_r_header'),
+                    style: 'tableHeader',
+                    bold: true,
+                  },
+                ],
+                [
+                  parseFromLangKey('other_eye_tbl_t_row'),
+                  `6/${eye.OphthalQ3}`,
+                  `6/${eye.OphthalQ4}`,
+                ],
+                [
+                  parseFromLangKey('other_eye_tbl_b_row'),
+                  `6/${eye.OphthalQ5}`,
+                  `6/${eye.OphthalQ6}`,
+                ],
               ],
-              [
-                parseFromLangKey('other_eye_tbl_t_row'),
-                `6/${eye.geriVisionQ3}`,
-                `6/${eye.geriVisionQ4}`,
-              ],
-              [
-                parseFromLangKey('other_eye_tbl_b_row'),
-                `6/${eye.geriVisionQ5}`,
-                `6/${eye.geriVisionQ6}`,
-              ],
-            ],
+            },
+            layout: {
+              hLineWidth: () => 0.5,
+              vLineWidth: () => 0.5,
+              hLineColor: () => 'black',
+              vLineColor: () => 'black',
+            },
           },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: () => 'black',
-            vLineColor: () => 'black',
+          {
+            width: '*', // takes remaining space
+            text: '', // or you can add other content here or leave blank
           },
-        },
-        {
-          width: '*', // takes remaining space
-          text: '', // or you can add other content here or leave blank
-        },
-      ],
-    },
+        ],
+      },
+      { text: '', margin: [0, 5] },
+      { text: `${parseFromLangKey('other_eye_error')} ${eye.OphthalQ8}\n`, style: 'normal' }]
+      : []),
     { text: '', margin: [0, 5] },
-    { text: `${parseFromLangKey('other_eye_error')} ${eye.geriVisionQ8}\n`, style: 'normal' },
-    { text: '', margin: [0, 5] },
+    ...(podiatry?.podiatryQ1 === "Yes"
+      ? [{ text: `${parseFromLangKey('podiatry_screening_true')}\n`, style: 'normal' }]
+      : []),
+    ...(vaccine?.VAX1 === "Yes"
+      ? [{ text: `${parseFromLangKey('vaccine_1')}\n`, style: 'normal' }]
+      : []),
+    ...(vaccine?.VAX2 === "Yes"
+      ? [{ text: `${parseFromLangKey('vaccine_2')}\n`, style: 'normal', margin: [20, 0, 0, 0] }]
+      : []),
+    ...(vaccine?.VAX3 === "Yes"
+      ? [{ text: `${parseFromLangKey('vaccine_3')}\n`, style: 'normal', margin: [20, 0, 0, 20] }]
+      : []),
   ]
 }
 
@@ -1428,6 +1405,7 @@ export function followUpSection(
   reg,
   vaccine,
   hsg,
+  lung,
   phlebotomy,
   fit,
   wce,
@@ -1436,6 +1414,9 @@ export function followUpSection(
   geriWhForm,
   oral,
   mental,
+  mammobus,
+  hpv,
+  socialService,
 ) {
   let vaccineString = null
   if (vaccine.VAX1 == 'Yes') {
@@ -1447,27 +1428,19 @@ export function followUpSection(
     hsgString = `${parseFromLangKey('fw_hsg')}\n`
   }
 
-  let phlebotomyString = null
-  if (reg.registrationQ15 == 'Yes') {
-    phlebotomyString += `${parseFromLangKey('fw_phlebotomy')}\n`
-    phlebotomyString += `${parseFromLangKey('fw_phlebotomy_1', reg.registrationQ18)}\n`
+  let lungString = null
+  if (lung.LUNG2 == "Yes") {
+    lungString = `${parseFromLangKey('fw_lung')}\n`
   }
 
-  let fitString = null
-  if (fit.fitQ2 == 'Yes') {
-    fitString = `${parseFromLangKey('fw_fit')}\n`
+  let mammobusString = null
+  if (mammobus.mammobusQ1 == "Yes") {
+    mammobusString = `${parseFromLangKey('fw_mammobus')}\n`
   }
 
   let hpvString = null
-  if (wce.wceQ5 == 'Yes') {
-    hpvString += `${parseFromLangKey('fw_wce')}\n`
-    hpvString += `${parseFromLangKey('fw_wce_1')}\n`
-  }
-
-  let nkfString = null
-  if (nkf.NKF1 == 'Yes') {
-    nkfString += `${parseFromLangKey('fw_nkf', nkf.NKF2)}\n`
-    nkfString += `${parseFromLangKey('fw_nkf_1')}\n`
+  if (hpv.HPV1 == "Yes") {
+    hpvString = `${parseFromLangKey('fw_hpv')}\n`
   }
 
   let mentalString = null
@@ -1485,6 +1458,11 @@ export function followUpSection(
     whisperString = `${parseFromLangKey('fw_wh')}\n`
   }
 
+  let aicString = null
+  if (socialService.socialServiceQ4 == "Yes") {
+    aicString = `${parseFromLangKey('fw_aic')}\n`
+  }
+
   let oralString = null
   if (oral.DENT4 == 'Yes') {
     oralString = `${parseFromLangKey('fw_dent')}\n`
@@ -1493,27 +1471,32 @@ export function followUpSection(
   return [
     { text: parseFromLangKey('fw_title'), style: 'subheader' },
     { text: parseFromLangKey('fw_intro'), style: 'normal' },
-    ...(vaccineString ? [{ text: vaccineString, style: 'normal' }] : []),
+    //...(vaccineString ? [{ text: vaccineString, style: 'normal' }] : []),
     ...(hsgString ? [{ text: hsgString, style: 'normal' }] : []),
-    ,
+    ...(lungString ? [{ text: lungString, style: 'normal' }] : []),
     // ...(phlebotomyString ? [{ text: phlebotomyString, style: 'normal' }] : []),
+    ,
     // ...(fitString ? [{ text: fitString, style: 'normal' }] : []),
     // ...(hpvString ? [{ text: hpvString, style: 'normal' }] : []),
     // ...(nkfString ? [{ text: nkfString, style: 'normal' }] : []),
-    ...(mentalString ? [{ text: mentalString, style: 'normal' }] : []),
+
     ...(graceString ? [{ text: graceString, style: 'normal' }] : []),
-    ...(whisperString ? [{ text: whisperString, style: 'normal' }] : []),
     ...(oralString ? [{ text: oralString, style: 'normal' }] : []),
+    ...(aicString ? [{ text: aicString, style: 'normal' }] : []),
+    ...(mentalString ? [{ text: mentalString, style: 'normal' }] : []),
+    ...(mammobusString ? [{ text: mammobusString, style: 'normal' }] : []),
+    ...(hpvString ? [{ text: hpvString, style: 'normal' }] : []),
+    //...(whisperString ? [{ text: whisperString, style: 'normal' }] : []),
     { text: '', margin: [0, 5] },
     //{ text: parseFromLangKey('fw_empty'), style: 'normal' },
   ]
 }
 
-export function memoSection(audioData, dietData, ptData, otData) {
+export function memoSection(audioData, dietData, ptData, otData, doctorData) {
   let audio =
     parseFromLangKey('memo_audio') +
-    parseFromLangKey('memo_audio_1', audioData.geriAudiometryQ13) +
-    parseFromLangKey('memo_audio_2', audioData.geriAudiometryQ12)
+    parseFromLangKey('memo_audio_1', audioData.AudiometryQ12) +
+    parseFromLangKey('memo_audio_2', audioData.AudiometryQ13)
 
   let diet = parseFromLangKey('memo_diet') + `${dietData.dietitiansConsultQ4}`
   if (dietData.dietitiansConsultQ5) {
@@ -1526,6 +1509,7 @@ export function memoSection(audioData, dietData, ptData, otData) {
 
   const pt = parseFromLangKey('memo_pt') + `${ptData.geriPtConsultQ1}`
   const ot = parseFromLangKey('memo_ot') + `${otData.geriOtConsultQ1}`
+  const doctor = parseFromLangKey('memo_doctor') + `${doctorData.doctorSConsultQ3}`
 
   return [
     { text: parseFromLangKey('memo_title'), style: 'subheader' },
@@ -1533,10 +1517,12 @@ export function memoSection(audioData, dietData, ptData, otData) {
       table: {
         widths: ['*'],
         body: [
-          [{ text: audio, style: 'normal' }],
+
           [{ text: diet, style: 'normal' }],
           [{ text: pt, style: 'normal' }],
           [{ text: ot, style: 'normal' }],
+          [{ text: audio, style: 'normal' }],
+          [{ text: doctor, style: 'normal' }],
         ],
       },
       layout: {
@@ -1644,8 +1630,9 @@ export const generateDoctorPdf = async (entry) => {
   })
 
   const generateMemoBody = () => {
-    return [
+    const content = [
       { text: 'Memo for ______________________', margin: [0, 20, 0, 2], alignment: 'center' },
+      { text: 'NRIC: ______________________', margin: [0, 6, 0, 2], alignment: 'center' },
       { text: 'Dear Colleague:', margin: [0, 15, 0, 10] },
 
       // Doctor's Memo
@@ -1665,9 +1652,11 @@ export const generateDoctorPdf = async (entry) => {
         ],
         margin: [0, 2, 0, 10],
       },
-
-      { text: '\nThank you very much.', margin: [0, 2, 0, 10] },
     ]
+    
+    content.push({ text: '\nThank you very much.', margin: [0, 2, 0, 10] })
+
+    return content
   }
 
   const generateSignatureBlock = () => ({
@@ -1822,10 +1811,10 @@ function eligibilitySection(eligibilityRows) {
         }
       ]
     },
-    {text: ''},
-    {text: ''},
-    {text: ''},
-    {text: ''},
+    { text: '' },
+    { text: '' },
+    { text: '' },
+    { text: '' },
     {
       stack: [
         {
@@ -1836,7 +1825,7 @@ function eligibilitySection(eligibilityRows) {
         }
       ]
     },
-    {text: ''},
+    { text: '' },
     {
       rowSpan: 3,
       stack: [
@@ -1865,18 +1854,18 @@ function eligibilitySection(eligibilityRows) {
         }
       ]
     },
-    {text: ''},
-    {text: ''},
-    {text: ''},
-    {text: ''},
-    {text: ''},
-    {text: ''},
-    {text: ''},
-    {text: ''},
-    {text: 'Part of Geriatric Screening', fontSize: 9},
-    {text: ''},
-    {text: 'Please refer above to part 15A for details on reason(s) for recommendation', fontSize: 9},
-    {text: ''},
+    { text: '' },
+    { text: '' },
+    { text: '' },
+    { text: '' },
+    { text: '' },
+    { text: '' },
+    { text: '' },
+    { text: '' },
+    { text: 'Part of Geriatric Screening', fontSize: 9 },
+    { text: '' },
+    { text: 'Please refer above to part 15A for details on reason(s) for recommendation', fontSize: 9 },
+    { text: '' },
   ];
 
   const col3Eligible = col2Texts.map(({ eligibilityKey }, i) => {
@@ -1884,7 +1873,7 @@ function eligibilitySection(eligibilityRows) {
       return '';
     }
     if (i === 19) { // Screening review
-      return { text: "YES", alignment: 'center', color: 'blue'};
+      return { text: "YES", alignment: 'center', color: 'blue' };
     }
     const eligibility = eligibilityRows.find((r) => r.name === eligibilityKey)?.eligibility;
     return {
@@ -1928,7 +1917,7 @@ function eligibilitySection(eligibilityRows) {
         ]),
         // Row 5 (Geriatric Screening) with ELIGIBLE? rowSpan=5
         [
-          { text: 9, fontSize: 10, rowSpan: 5},
+          { text: 9, fontSize: 10, rowSpan: 5 },
           { text: col2Texts[5].label, fontSize: 11 },
           { ...col3Eligible[5], fontSize: 9, alignment: 'center', rowSpan: 5 },
           { text: col4Eligible[5], fontSize: 9 },
@@ -1989,7 +1978,7 @@ function chasStatusSection(reg) {
             text: 'FORM A',
             bold: true,
             fontSize: 20,
-            margin: [0,-35,0,5],
+            margin: [0, -35, 0, 5],
             alignment: 'center'
           }
         ],
@@ -2134,21 +2123,21 @@ function triageTableSection(triage = {}) {
               {
                 columns: [
                   { text: 'WEIGHT:', bold: true, fontSize: 9 },
-                  { text: weightStr, fontSize: 9,}
+                  { text: weightStr, fontSize: 9, }
                 ],
                 margin: [0, 2, 0, 2]
               },
               {
                 columns: [
                   { text: 'HEIGHT:', bold: true, fontSize: 9 },
-                  { text: heightStr, fontSize: 9,}
+                  { text: heightStr, fontSize: 9, }
                 ],
                 margin: [0, 2, 0, 2]
               },
               {
                 columns: [
                   { text: 'BMI:', bold: true, fontSize: 9 },
-                  { text: bmiStr, fontSize: 9,}
+                  { text: bmiStr, fontSize: 9, }
                 ],
                 margin: [0, 2, 0, 2]
               }
@@ -2165,7 +2154,7 @@ function triageTableSection(triage = {}) {
                   { text: '2nd BP: ', bold: true, fontSize: 9 },
                   { text: `${bp2}`, fontSize: 9 }
                 ],
-                margin:[0, 2, 0, 2]
+                margin: [0, 2, 0, 2]
               },
               {
                 text: [
@@ -2176,7 +2165,7 @@ function triageTableSection(triage = {}) {
                 ],
                 margin: [0, 2, 0, 2]
               },
-              { text: `Waist circumference: ${waist}`, fontSize: 9, margin: [0, 2, 0, 2]},
+              { text: `Waist circumference: ${waist}`, fontSize: 9, margin: [0, 2, 0, 2] },
             ],
             margin: [0, 4, 0, 4]
           },
@@ -2208,7 +2197,7 @@ function triageTableSection(triage = {}) {
 }
 
 
-let formAImages = [pic1, pic2, pic3, pic4];
+let formAImages = [pic1, pic2];
 
 function picSections() {
   return formAImages

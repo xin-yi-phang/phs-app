@@ -160,7 +160,7 @@ export default function GeriPhqForm({ changeTab, nextTab }) {
               </PopupText>
               <PopupText qnNo='PHQExtra9' triggerValue='Yes'>
                 <Typography variant='subtitle1' sx={{ color: 'red' }}>
-                  <b>*Patient requires urgent attention, please escalate*</b>
+                  <b>*Patient requires urgent attention, please escalate to supervisor of the station to bring to Doctor&apos;s station*</b>
                 </Typography>
               </PopupText>
 

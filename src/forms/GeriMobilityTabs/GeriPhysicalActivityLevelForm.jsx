@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react'
 import { Formik, Form, FastField } from 'formik'
 import * as Yup from 'yup'
 
-import { Divider, Paper, CircularProgress, Typography, Box, Button } from '@mui/material'
+import { Divider, Paper, CircularProgress, Box, Button } from '@mui/material'
 
 import { submitForm } from '../../api/api.jsx'
 import { FormContext } from '../../api/utils.js'
@@ -12,6 +12,7 @@ import '../fieldPadding.css'
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup.jsx'
 import CustomCheckboxGroup from '../../components/form-components/CustomCheckboxGroup.jsx'
 import CustomTextField from '../../components/form-components/CustomTextField.jsx'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 
 const formName = 'geriPhysicalActivityLevelForm'
 
@@ -125,7 +126,7 @@ const GeriPhysicalActivityLevelForm = ({ changeTab, nextTab }) => {
         actions.setSubmitting(false)
       }}
     >
-      {(handleSubmit, errors, submitCount) => (
+      {({ errors, submitCount }) => (
         <Paper elevation={2} p={0} m={0}>
           <Form className='fieldPadding'>
             <div className='form--div'>
@@ -225,7 +226,7 @@ const GeriPhysicalActivityLevelForm = ({ changeTab, nextTab }) => {
 
               <h3>7. If yes, were any of the falls injurious?</h3>
               <p>
-                If participant had 2 or more falls, or 1 fall with injury, REFER TO DOCTOR'S
+                If participant had 2 or more falls, or 1 fall with injury, REFER TO DOCTOR&apos;S
                 CONSULTATION
               </p>
               <FastField
@@ -262,15 +263,14 @@ const GeriPhysicalActivityLevelForm = ({ changeTab, nextTab }) => {
                 name='geriPhysicalActivityLevelQ6'
                 label='Geri - Physical Activity Level Q6'
                 component={CustomCheckboxGroup}
-                options={formOptions.geriPhysicalActivityLevelQ6.map((o) => o.value)}
+                options={formOptions.geriPhysicalActivityLevelQ6}
               />
             </div>
 
-            {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-              <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                Please fill in all required fields correctly.
-              </Typography>
-            )}
+            <ErrorNotification 
+              show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+              message="Please fill in all required fields correctly."
+            />
 
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
               {loading ? (

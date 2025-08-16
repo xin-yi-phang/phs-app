@@ -1,13 +1,18 @@
+
 import { Button, CircularProgress, Paper, Typography, Grid, Divider } from '@mui/material'
 import { FastField, Field, Form, Formik } from 'formik'
 import { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+
 import * as Yup from 'yup'
 import { submitForm } from '../../api/api.jsx'
 import { FormContext } from '../../api/utils.js'
 import CustomNumberField from '../../components/form-components/CustomNumberField.jsx'
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
+
 import { getSavedData } from '../../services/mongoDB'
+
 import '../fieldPadding.css'
 import '../forms.css'
 import allForms from '../forms.json'
@@ -104,7 +109,7 @@ const GeriAmtForm = ({ changeTab, nextTab }) => {
         }
       }}
     >
-      {(formikProps, handleSubmit, errors, submitCount) => (
+      {(formikProps) => (
         <Paper>
           <Form className='fieldPadding'>
             <div className='form--div'>
@@ -114,7 +119,7 @@ const GeriAmtForm = ({ changeTab, nextTab }) => {
                 alt='Scoring rubric for geri AMT'
               />
               <h2>
-                Please select 'Yes' if participant answered correctly or 'No' if answered
+                Please select &apos;Yes&apos; if participant answered correctly or &apos;No&apos; if answered
                 incorrectly.
               </h2>
 
@@ -125,9 +130,7 @@ const GeriAmtForm = ({ changeTab, nextTab }) => {
                     <h3>
                       {`${qNum})`} {`Question ${qNum}`} {getQuestionText(qNum)}
                     </h3>
-                    <Typography variant='body2' gutterBottom>
-                      {`Was Q${qNum} answered correctly?`}
-                    </Typography>
+                    <Typography variant='body2'>{`Was Q${qNum} answered correctly?`}</Typography>
                     <Field
                       name={`geriAmtQ${qNum}`}
                       label={`geriAmtQ${qNum}`}
@@ -138,6 +141,16 @@ const GeriAmtForm = ({ changeTab, nextTab }) => {
                   </div>
                 )
               })}
+
+              {/*<h3>Supplementary questions:</h3>
+              <Field
+                name='geriAmtQ11'
+                label='geriAmtQ11'
+                component={CustomRadioGroup}
+                options={options}
+                row
+              />*/}
+
               <h4>AMT Total Score: {getScore(formikProps.values)} /10</h4>
 
               <Typography sx={{ fontWeight: 'bold', mt: 3 }}>
@@ -169,11 +182,10 @@ const GeriAmtForm = ({ changeTab, nextTab }) => {
               />
             </div>
 
-            {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-              <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                Please fill in all required fields correctly.
-              </Typography>
-            )}
+            <ErrorNotification
+              show={formikProps.submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0}
+              message="Please fill in all required fields correctly."
+            />
 
             <br />
 
@@ -219,7 +231,7 @@ const GeriAmtForm = ({ changeTab, nextTab }) => {
 
 const getQuestionText = (qNum) => {
   const textMap = {
-    1: 'What is the year? 请问今是什么年份？',
+    1: 'What is the year? 请问今年是什么年份？',
     2: 'About what time is it? (within 1 hour) 请问现在大约是几点钟（一在一个小时之内）？',
     3: 'What is your age? 请问您今年几岁？',
     4: 'What is your date of birth? 请问您的出生日期或生日？',

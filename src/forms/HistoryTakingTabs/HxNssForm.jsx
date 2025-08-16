@@ -8,6 +8,7 @@ import { FormContext } from '../../api/utils.js'
 import CustomTextField from 'src/components/form-components/CustomTextField.jsx'
 import CustomCheckboxGroup from '../../components/form-components/CustomCheckboxGroup'
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 import { getSavedData } from '../../services/mongoDB'
 import allForms from '../forms.json'
 
@@ -54,7 +55,7 @@ const formOptions = {
     { label: 'Kidney Disease', value: 'Kidney Disease' },
     { label: 'Hypertension', value: 'Hypertension' },
     { label: 'Hyperlipidemia', value: 'Hyperlipidemia' },
-    { label: 'Diabetes', value: 'Diabetes' },
+    { label: 'Diabetes/Pre-Diabetic', value: 'Diabetes/Pre-Diabetic' },
     {
       label:
         'Heart disease (includes heart attack, heart failure, heart valve disease, stroke, blood vessel/vascular disease)',
@@ -118,7 +119,7 @@ export default function HxNssForm({ changeTab, nextTab }) {
       enableReinitialize
       onSubmit={handleSubmit}
     >
-      {({ isSubmitting }) => (
+      {({ isSubmitting, errors, submitCount }) => (
         <Form className='fieldPadding'>
           <Typography variant='h4' gutterBottom>
             <strong>PAST MEDICAL HISTORY</strong>
@@ -135,7 +136,13 @@ export default function HxNssForm({ changeTab, nextTab }) {
             <li>Complications</li>
             <li>Follow up route (specify whether GP/Polyclinic/FMC/SOC)</li>
           </Typography>
-          <FastField name='PMHX1' component={CustomTextField} label='PMHX1' sx={{ mb: 5 }} multiline/>
+          <FastField
+            name='PMHX1'
+            component={CustomTextField}
+            label='PMHX1'
+            sx={{ mb: 5 }}
+            multiline
+          />
 
           <Typography variant='subtitle1' color='error' fontWeight='bold' gutterBottom>
             If participant is not engaged with any follow-up, ask:
@@ -196,11 +203,11 @@ export default function HxNssForm({ changeTab, nextTab }) {
             Do you have any drug allergies? If yes, please specify.
           </Typography>
           <FastField
-          name='PMHX10'
-          label='PMHX10'
-          component={CustomRadioGroup}
-          options={formOptions.PMHX10}
-          row
+            name='PMHX10'
+            label='PMHX10'
+            component={CustomRadioGroup}
+            options={formOptions.PMHX10}
+            row
           />
           <PopupText qnNo='PMHX10' triggerValue='Yes'>
             <Typography fontWeight='bold'>Please specify:</Typography>
@@ -275,14 +282,14 @@ export default function HxNssForm({ changeTab, nextTab }) {
             doctors later. Explain reasons for recommendation.
           </Typography>
           <Typography variant='subtitle1' fontWeight='bold'>
-            For participant with DM, refer to Doctor's Station if:
+            For participant with DM, refer to Doctor&apos;s Station if:
           </Typography>
           <ul>
             <li>Symptomatic, and non-compliant</li>
             <li>Asymptomatic, and non-compliant</li>
           </ul>
           <Typography>
-            Also refer to Doctor's Station if participant has not been diagnosed with DM, but has
+            Also refer to Doctor&apos;s Station if participant has not been diagnosed with DM, but has
             signs of DM (polyuria, polydipsia, periphery neuropathy, blurring of vision etc.)
           </Typography>
 
@@ -293,14 +300,17 @@ export default function HxNssForm({ changeTab, nextTab }) {
             options={formOptions.PMHX7}
             row
           />
-          <FastField
-            name='PMHXShortAns7'
-            component={CustomTextField}
-            label="PMHXShortAns7 (Explain reasons for recommendation to Doctor's Station)"
-            fullWidth
-            multiline
-            sx={{ mb: 3 }}
-          />
+
+          <PopupText qnNo='PMHX7' triggerValue='Yes'>
+            <FastField
+              name='PMHXShortAns7'
+              component={CustomTextField}
+              label="PMHXShortAns7 (Explain reasons for recommendation to Doctor's Station)"
+              fullWidth
+              multiline
+              sx={{ mb: 3 }}
+            />
+          </PopupText>
 
           {/* For participants who are 60 and above, show PMHX8 and PMHX9 */}
           {regForm.registrationQ4 >= 60 && (
@@ -359,6 +369,11 @@ export default function HxNssForm({ changeTab, nextTab }) {
             </>
           )}
 
+          <ErrorNotification
+            show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+            message="Please fill in all required fields correctly."
+          />
+
           <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
             {loading || isSubmitting ? (
               <CircularProgress />
@@ -374,9 +389,7 @@ export default function HxNssForm({ changeTab, nextTab }) {
     </Formik>
   )
 
-  return (
-    <Paper elevation={2}>
-      {renderForm()}
-    </Paper>
-  )
+
+  return <Paper elevation={2}>{renderForm()}</Paper>
 }
+

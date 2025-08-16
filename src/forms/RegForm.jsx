@@ -15,11 +15,15 @@ import CustomTextField from '../components/form-components/CustomTextField'
 import CustomCheckbox from '../components/form-components/CustomCheckbox'
 import CustomRadioGroup from '../components/form-components/CustomRadioGroup'
 import CustomSelect from '../components/form-components/CustomSelect'
+
+import ErrorNotification from 'src/components/form-components/ErrorNotification'
+
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs from 'dayjs'
+
 
 const initialValues = {
   registrationQ1: 'Mr',
@@ -72,16 +76,19 @@ const RegForm = () => {
     fetchData()
   }, [patientId])
 
+  // Calculates based on birth year only [e.g. all participants born in 1985 are considered 40 y/o in 2025]
   const calculateAgeFromDayjs = (birthDayjs) => {
     if (!birthDayjs || !birthDayjs.isValid()) return 0
     const today = dayjs()
     let age = today.year() - birthDayjs.year()
-    if (
-      today.month() < birthDayjs.month() ||
-      (today.month() === birthDayjs.month() && today.date() < birthDayjs.date())
-    ) {
-      age--
-    }
+
+    // Logic for adjusting age if birthday hasn't occurred yet this year
+    // if (
+    //   today.month() < birthDayjs.month() ||
+    //   (today.month() === birthDayjs.month() && today.date() < birthDayjs.date())
+    // ) {
+    //   age--
+    // }
     setPatientAge(age)
     return age
   }
@@ -197,12 +204,12 @@ const RegForm = () => {
     >
       {({ isSubmitting, submitCount, setFieldValue, values, ...formikProps }) => (
         <Form className='fieldPadding'>
-          <div className='form--div'>
-            <Typography variant='h4' component='h1' gutterBottom>
+          <div>
+            <Typography variant='h2' fontWeight='bold' sx={{ mb: 2 }}>
               Registration
             </Typography>
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold' gutterBottom>
               Salutation 称谓
             </Typography>
             <FastField
@@ -212,7 +219,7 @@ const RegForm = () => {
               options={formOptions.registrationQ1}
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold' gutterBottom>
               Initials (e.g Chen Ren Ying - Chen R Y, Christie Tan En Ning - Christie T E N)
             </Typography>
             <Typography>
@@ -225,7 +232,7 @@ const RegForm = () => {
               multiline
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold' gutterBottom>
               Birthday
             </Typography>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -262,15 +269,15 @@ const RegForm = () => {
               </DemoContainer>
             </LocalizationProvider>
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold' gutterBottom>
               Age
             </Typography>
             <Typography variant='body2' color='text.secondary'>
               registrationQ4
             </Typography>
-            <Typography className='blue'>{patientAge}</Typography>
+            <Typography sx={{ color: 'blue', mb: 2 }}>{patientAge}</Typography>
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Gender
             </Typography>
             <FastField
@@ -281,7 +288,7 @@ const RegForm = () => {
               row
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Race 种族
             </Typography>
             <FastField
@@ -302,10 +309,10 @@ const RegForm = () => {
               />
             </PopupText>
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Nationality 国籍
             </Typography>
-            <Typography>
+            <Typography sx={{ color: 'red' }}>
               Please Note: Non Singapore Citizens/ Non-PRs are unfortunately not eligible for this
               health screening
             </Typography>
@@ -316,7 +323,7 @@ const RegForm = () => {
               options={formOptions.registrationQ7}
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Marital Status 婚姻状况
             </Typography>
             <FastField
@@ -326,12 +333,12 @@ const RegForm = () => {
               options={formOptions.registrationQ8}
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Occupation 工作
             </Typography>
             <FastField name='registrationQ9' label='registrationQ9' component={CustomTextField} />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Are you currently part of HealthierSG?
             </Typography>
             <FastField
@@ -342,7 +349,7 @@ const RegForm = () => {
               row
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               CHAS Status 社保援助计划
             </Typography>
             <FastField
@@ -352,7 +359,7 @@ const RegForm = () => {
               options={formOptions.registrationQ12}
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Pioneer Generation Status 建国一代配套
             </Typography>
             <FastField
@@ -362,7 +369,7 @@ const RegForm = () => {
               options={formOptions.registrationQ13}
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Preferred Language for Health Report
             </Typography>
             <FastField
@@ -372,7 +379,7 @@ const RegForm = () => {
               options={formOptions.registrationQ14}
             />
 
-            <Typography variant='h4' component='h2' gutterBottom sx={{ mt: 4 }}>
+            <Typography variant='h4' fontWeight='bold' sx={{ mt: 4 }}>
               Compliance to PDPA 同意书
             </Typography>
             <Typography paragraph>
@@ -400,7 +407,7 @@ const RegForm = () => {
               label='I agree and consent to the above.'
             />
 
-            <Typography variant='h6' component='h3' gutterBottom sx={{ mt: 4 }}>
+            <Typography variant='h4' fontWeight='bold' sx={{ mt: 4 }}>
               Has patient attended any health screenings before? (e.g. Annual Health Screening etc.)
             </Typography>
             <FastField
@@ -411,7 +418,7 @@ const RegForm = () => {
               row
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Has patient pre-registered for the Mammobus station?
             </Typography>
             <FastField
@@ -422,7 +429,7 @@ const RegForm = () => {
               row
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Patient consented to being considered for participation in Long Term Follow-Up (LTFU)?
               (Patient has to sign and tick Form C)
             </Typography>
@@ -434,7 +441,7 @@ const RegForm = () => {
               row
             />
 
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Does the patient speak English or Chinese?
             </Typography>
             <FastField
@@ -447,11 +454,10 @@ const RegForm = () => {
           </div>
 
           <Box mt={2} mb={2}>
-            {submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0 && (
-              <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                Please fill in all required fields correctly.
-              </Typography>
-            )}
+            <ErrorNotification 
+              show={submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0}
+              message="Please fill in all required fields correctly."
+            />
             {loading || isSubmitting ? (
               <CircularProgress />
             ) : (

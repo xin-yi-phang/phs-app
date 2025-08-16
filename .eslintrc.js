@@ -29,5 +29,6 @@ module.exports = {
   rules: {
     'no-unused-vars': 'warn', // Many unused variables in project - ignore for now
     'react/prop-types': 'off', // Switch off for now 
+    'react/react-in-jsx-scope': 'off',
   },
 }

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { Formik, Form, FastField } from 'formik'
+import { Formik, FastField } from 'formik'
 import * as Yup from 'yup'
-import { Paper, CircularProgress, Button, Divider, Typography } from '@mui/material'
+import { Paper, CircularProgress, Button, Divider, Typography, Alert } from '@mui/material'
 import { useNavigate } from 'react-router'
 
 import { submitForm } from '../../api/api.jsx'
@@ -12,8 +12,11 @@ import '../forms.css'
 
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
 import CustomTextField from '../../components/form-components/CustomTextField'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 
 import PopupText from 'src/utils/popupText'
+
+// This file is for the Gynae tab in the WCE station, not to be confused with the Gynae tab in the History Taking station
 
 const validationSchema = Yup.object({
   GYNAE1: Yup.string().required(),
@@ -150,7 +153,12 @@ const GynaeForm = () => {
         <Paper elevation={2} p={0} m={0}>
           <form onSubmit={handleSubmit} className='form--div fieldPadding'>
             <h1>Gynecology</h1>
-            <h3 className='red'>Only ask if participant is female:</h3>
+
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              <Typography variant='h6' component='h3' sx={{ color: 'error.main', fontWeight: 'bold' }}>
+                Only ask if participant is female
+              </Typography>
+            </Alert>
 
             <FastField
               name='GYNAE1'
@@ -342,11 +350,10 @@ const GynaeForm = () => {
               />
             </PopupText>
 
-            {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-              <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                Please fill in all required fields correctly.
-              </Typography>
-            )}
+            <ErrorNotification
+              show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+              message="Please fill in all required fields correctly."
+            />
 
             <div>
               {loading ? (

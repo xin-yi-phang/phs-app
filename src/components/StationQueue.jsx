@@ -173,18 +173,6 @@ const StationQueue = () => {
     isLoading(false)
   }
 
-  // Handler for remove all button (remove all patients from queue)
-  const handlePatientRemoveAll = async (event, stationName) => {
-    event.preventDefault()
-    isLoading(true)
-
-    const sq = getQueueCollection()
-
-    await sq.findOneAndUpdate({ stationName }, { $set: { queueItems: [] } }, { upsert: true })
-    setRefresh(!refresh)
-    isLoading(false)
-  }
-
   // Set a listener to update the station queues when the refresh state changes
   useEffect(() => {
     const updateStationQueue = async () => {
@@ -233,9 +221,7 @@ const StationQueue = () => {
         }}
       />
 
-      {loading ? (
-        <CircularProgress />
-      ) : (
+      {admin && (
         <Button color='primary' size='large' type='submit' onClick={handleAddStation}>
           Add
         </Button>
@@ -260,11 +246,16 @@ const StationQueue = () => {
               }}
             >
               <Tooltip title={stationName}>
-                <Typography color='textPrimary' gutterBottom variant='h4' noWrap
-                sx={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}>
+                <Typography
+                  color='textPrimary'
+                  gutterBottom
+                  variant='h4'
+                  noWrap
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
                   {stationName}
                 </Typography>
               </Tooltip>
@@ -320,19 +311,6 @@ const StationQueue = () => {
                   }}
                 >
                   Remove First
-                </Button>
-
-                <Button
-                  color='primary'
-                  size='large'
-                  type='submit'
-                  disabled={loading}
-                  onClick={(event) => handlePatientRemoveAll(event, stationName)}
-                  sx={{
-                    flex: '1',
-                  }}
-                >
-                  Remove All
                 </Button>
 
                 <Button

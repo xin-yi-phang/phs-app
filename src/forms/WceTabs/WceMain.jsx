@@ -19,7 +19,7 @@ function TabPanel(props) {
       {...other}
     >
       {value === index && (
-        <Box p={3}>
+        <Box sx={{ p: 3 }}>
           <Typography component='div'>{children}</Typography>
         </Box>
       )}
@@ -64,10 +64,10 @@ export default function WceTabs() {
       </AppBar>
       <Paper elevation={2}>
         <TabPanel value={value} index={0}>
-          <WceForm />
+          <WceForm changeTab={handleChange} nextTab={1} />
         </TabPanel>
         <TabPanel value={value} index={1}>
-          <GynaeForm />
+          <GynaeForm changeTab={handleChange} nextTab={2} />
         </TabPanel>
       </Paper>
     </WceWrapper>

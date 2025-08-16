@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { Field, Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import { Typography, Divider, Paper, CircularProgress, Button } from '@mui/material'
+import { Typography, Paper, CircularProgress, Button } from '@mui/material'
 
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
 import CustomNumberField from '../../components/form-components/CustomNumberField'
 import CustomTextField from '../../components/form-components/CustomTextField'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 
 import { submitForm, calculateSppbScore } from '../../api/api.jsx'
 import { FormContext } from '../../api/utils.js'
@@ -130,14 +131,6 @@ const GeriSppbForm = (props) => {
               SHORT PHYSICAL PERFORMANCE BATTERY (SPPB)
             </Typography>
 
-            {formikProps.submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0 && (
-              <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                Please fill in all required fields correctly.
-              </Typography>
-            )}
-
-            <br />
-
             <Typography variant='h6' fontWeight='bold'>
               1) REPEATED CHAIR STANDS
             </Typography>
@@ -210,7 +203,7 @@ const GeriSppbForm = (props) => {
 
             <br />
 
-            <Typography variant='h6' fontWeight='bold'>
+            <Typography variant='subtitle1' fontWeight='bold' sx={{ mt: 2}}>
               Fall Risk Level:
             </Typography>
             <Field
@@ -238,6 +231,14 @@ const GeriSppbForm = (props) => {
             <Field name='geriSppbQ12' label='geriSppbQ12' component={CustomTextField} />
 
             <br />
+
+            <ErrorNotification 
+              show={formikProps.submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0}
+              message="Please fill in all required fields correctly."
+            />
+
+            <br />
+            
             <div>
               {loading ? (
                 <CircularProgress />

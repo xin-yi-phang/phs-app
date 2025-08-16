@@ -1,5 +1,4 @@
-import { createTheme } from '@mui/system'
-import { adaptV4Theme } from '@mui/material/styles';
+import { createTheme, adaptV4Theme } from '@mui/material/styles';
 import shadows from './shadows'
 import typography from './typography'
 

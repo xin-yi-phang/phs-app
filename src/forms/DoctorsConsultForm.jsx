@@ -10,8 +10,6 @@ import {
   Grid,
   Paper,
   Typography,
-  Box,
-  Alert,
 } from '@mui/material'
 
 import { submitForm } from '../api/api.jsx'
@@ -21,6 +19,7 @@ import './fieldPadding.css'
 import allForms from './forms.json'
 
 import CustomTextField from 'src/components/form-components/CustomTextField'
+import ErrorNotification from 'src/components/form-components/ErrorNotification'
 import PopupText from '../utils/popupText'
 import CustomRadioGroup from 'src/components/form-components/CustomRadioGroup.jsx'
 
@@ -36,6 +35,7 @@ const initialValues = {
   doctorSConsultQ9: '',
   doctorSConsultQ10: '',
   doctorSConsultQ11: '',
+  doctorSConsultQ12: '',
   doctorSConsultQ13: '',
 }
 
@@ -64,6 +64,7 @@ const validationSchema = Yup.object().shape({
   }),
   doctorSConsultQ10: Yup.string().required('This field is required'),
   doctorSConsultQ11: Yup.string().required('This field is required'),
+  doctorSConsultQ12: Yup.string().required('This field is required'),
 })
 
 const formOptions = {
@@ -72,7 +73,6 @@ const formOptions = {
     { label: 'No', value: 'No' },
   ],
   doctorSConsultQ11: [{ label: 'Yes', value: 'Yes' }],
-
 }
 
 const formName = 'doctorConsultForm'
@@ -85,15 +85,13 @@ const DoctorsConsultForm = () => {
 
   // forms to retrieve for side panel
   const [hcsr, setHcsr] = useState({})
-  const [geriVision, setGeriVision] = useState({})
-  const [geriAudio, setGeriAudio] = useState({})
+  const [ophthal, setOphthal] = useState({})
+  const [audio, setAudio] = useState({})
   const [geriPHQ, setPHQ] = useState({})
   const [lung, setLung] = useState({})
   const [triage, setTriage] = useState({})
-  const [osteo, setOsteo] = useState({})
   const [pmhx, setPMHX] = useState({})
   const [social, setSocial] = useState({})
-  const [family, setFamily] = useState({})
 
   const navigate = useNavigate()
 
@@ -104,42 +102,37 @@ const DoctorsConsultForm = () => {
 
       const loadPastForms = async () => {
         const hcsrData = getSavedData(patientId, allForms.hxHcsrForm)
-        const geriVisionData = getSavedData(patientId, allForms.geriVisionForm)
-        const geriAudioData = getSavedData(patientId, allForms.geriAudiometryForm)
+        const ophthalData = getSavedData(patientId, allForms.ophthalForm)
+        const audioData = getSavedData(patientId, allForms.audiometryForm)
         const lungData = getSavedData(patientId, allForms.lungForm)
         const PHQDATA = getSavedData(patientId, allForms.geriPhqForm)
         const triageData = getSavedData(patientId, allForms.triageForm)
-        const osteoData = getSavedData(patientId, allForms.osteoForm)
         const pmhxData = getSavedData(patientId, allForms.hxNssForm)
         const socialData = getSavedData(patientId, allForms.hxSocialForm)
-        const familyData = getSavedData(patientId, allForms.hxFamilyForm)
 
         Promise.all([
           hcsrData,
-          geriVisionData,
-          geriAudioData,
+          ophthalData,
+          audioData,
           lungData,
           PHQDATA,
           triageData,
-          osteoData,
           pmhxData,
           socialData,
-          familyData,
         ]).then((result) => {
           setHcsr(result[0])
-          setGeriVision(result[1])
-          setGeriAudio(result[2])
+          setOphthal(result[1])
+          setAudio(result[2])
           setLung(result[3])
           setPHQ(result[4])
           setTriage(result[5])
-          setOsteo(result[6])
-          setPMHX(result[7])
-          setSocial(result[8])
-          setFamily(result[9])
+          setPMHX(result[6])
+          setSocial(result[7])
           setLoadingSidePanel(false)
         })
       }
       loadPastForms()
+
     }
     fetchData()
   }, [patientId])
@@ -150,13 +143,15 @@ const DoctorsConsultForm = () => {
       const response = await submitForm(values, patientId, formName)
 
       if (response.result) {
-        const collection = getDocPdfQueueCollection()
-        await collection.insertOne({
-          patientId: patientId,
-          doctorName: values.doctorSConsultQ1, // Using doctor's name from Q1
-          printed: false,
-          createdAt: new Date(),
-        })
+        if (values.doctorSConsultQ12 === 'Yes') {
+          const collection = getDocPdfQueueCollection()
+          await collection.insertOne({
+            patientId: patientId,
+            doctorName: values.doctorSConsultQ1, // Using doctor's name from Q1
+            printed: false,
+            createdAt: new Date(),
+          })
+        }
 
         setTimeout(() => {
           alert('Successfully submitted form')
@@ -182,37 +177,37 @@ const DoctorsConsultForm = () => {
       onSubmit={handleSubmit}
       enableReinitialize
     >
-      {({ errors, isSubmitting, submitCount, ...formikProps }) => (
+      {({ errors, isSubmitting, submitCount }) => (
         <Form className='fieldPadding'>
           <div className='form--div'>
             <h1>Doctor&apos;s Station</h1>
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Doctor&apos;s Name
             </Typography>
             <FastField
               name='doctorSConsultQ1'
-              label='doctorSConsultQ1'
+              label='doctorQ1'
               component={CustomTextField}
               fullWidth
               multiline
             />
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Clinical Findings
             </Typography>
             <FastField
               name='doctorSConsultQ2'
-              label='doctorSConsultQ2'
+              label='doctorQ2'
               component={CustomTextField}
               fullWidth
               multiline
               minRows={4}
             />
-            <Typography variant='h6' component='h3' gutterBottom>
+            <Typography variant='h4' fontWeight='bold'>
               Doctor&apos;s Memo
             </Typography>
             <FastField
               name='doctorSConsultQ3'
-              label="Doctor's Memo"
+              label='doctorQ3'
               component={CustomTextField}
               fullWidth
               multiline
@@ -221,7 +216,7 @@ const DoctorsConsultForm = () => {
             <h3>Refer to dietitian?</h3>
             <FastField
               name='doctorSConsultQ4'
-              label='doctorSConsultQ4'
+              label='doctorQ4'
               component={CustomRadioGroup}
               options={formOptions.doctorSConsultYESNO}
               row
@@ -232,7 +227,7 @@ const DoctorsConsultForm = () => {
               </Typography>
               <FastField
                 name='doctorSConsultQ5'
-                label='doctorSConsultQ5'
+                label='doctorQ5'
                 component={CustomTextField}
                 fullWidth
                 multiline
@@ -242,7 +237,7 @@ const DoctorsConsultForm = () => {
             <h3>Refer to Social Support?</h3>
             <FastField
               name='doctorSConsultQ6'
-              label='doctorSConsultQ6'
+              label='doctorQ6'
               component={CustomRadioGroup}
               options={formOptions.doctorSConsultYESNO}
               row
@@ -253,7 +248,7 @@ const DoctorsConsultForm = () => {
               </Typography>
               <FastField
                 name='doctorSConsultQ7'
-                label='doctorSConsultQ7'
+                label='doctorQ7'
                 component={CustomTextField}
                 fullWidth
                 multiline
@@ -263,7 +258,7 @@ const DoctorsConsultForm = () => {
             <h3>Refer to Mental Health? (and indicated on Form A)</h3>
             <FastField
               name='doctorSConsultQ13'
-              label='doctorSConsultQ13'
+              label='doctorQ13'
               component={CustomRadioGroup}
               options={formOptions.doctorSConsultYESNO}
               row
@@ -271,7 +266,7 @@ const DoctorsConsultForm = () => {
             <h3>Refer to Dental?</h3>
             <FastField
               name='doctorSConsultQ8'
-              label='doctorSConsultQ8'
+              label='doctorQ8'
               component={CustomRadioGroup}
               options={formOptions.doctorSConsultYESNO}
               row
@@ -282,7 +277,7 @@ const DoctorsConsultForm = () => {
               </Typography>
               <FastField
                 name='doctorSConsultQ9'
-                label='doctorSConsultQ9'
+                label='doctorQ9'
                 component={CustomTextField}
                 fullWidth
                 multiline
@@ -293,25 +288,34 @@ const DoctorsConsultForm = () => {
             <h3>Does patient require urgent follow up</h3>
             <FastField
               name='doctorSConsultQ10'
-              label='doctorSConsultQ10'
+              label='doctorQ10'
               component={CustomRadioGroup}
               options={formOptions.doctorSConsultYESNO}
               row
             />
-            <h3>Completed Doctor&apos;s Consult station. Please check that Form A is filled.</h3>
+            <h3>Completed Doctor&apos;s station. Please check that Form A is filled.</h3>
             <FastField
               name='doctorSConsultQ11'
-              label='doctorSConsultQ11'
+              label='doctorQ11'
               component={CustomRadioGroup}
               options={formOptions.doctorSConsultQ11}
             />
+
+            <h3>Does this patient need a memo to be printed?</h3>
+            <FastField
+              name='doctorSConsultQ12'
+              label='doctorQ12'
+              component={CustomRadioGroup}
+              options={formOptions.doctorSConsultYESNO}
+              row
+            />
           </div>
 
-          {Object.keys(errors).length > 0 && submitCount > 0 && (
-            <Box sx={{ mt: 2 }}>
-              <Alert severity='error'>Please correct the errors above before submitting.</Alert>
-            </Box>
-          )}
+          <ErrorNotification
+            show={Object.keys(errors).length > 0 && submitCount > 0}
+            message="Please correct the errors above before submitting."
+          />
+
           <div>
             {loading ? (
               <CircularProgress />
@@ -331,43 +335,6 @@ const DoctorsConsultForm = () => {
     <div className='summary--question-div'>
       <h2>Patient Requires Referrals For: </h2>
       <ul>
-        {!lung ? <p className='red'>nil lung data!</p> : <></>}
-        {lung && lung.LUNG14 == 'Yes' ? (
-          <li>
-            <p>
-              Patient has <strong>{lung.LUNG13}</strong>
-            </p>
-            <p>Lung Function Results</p>
-            <table style={{ border: '1px solid black', borderCollapse: 'collapse' }}>
-              <tr style={{ border: '1px solid black' }}>
-                <td colSpan={2} style={{ border: '1px solid black' }}>
-                  Pre-Bronchodilator
-                </td>
-              </tr>
-              <tr style={{ border: '1px solid black' }}>
-                <td style={{ border: '1px solid black' }}>FVC (L)</td>
-                <td style={{ border: '1px solid black' }}>{lung.LUNG3}</td>
-              </tr>
-              <tr style={{ border: '1px solid black' }}>
-                <td style={{ border: '1px solid black' }}>FEV1 (L)</td>
-                <td style={{ border: '1px solid black' }}>{lung.LUNG4}</td>
-              </tr>
-              <tr style={{ border: '1px solid black' }}>
-                <td style={{ border: '1px solid black' }}>FVC (%pred)</td>
-                <td style={{ border: '1px solid black' }}>{lung.LUNG5}</td>
-              </tr>
-              <tr style={{ border: '1px solid black' }}>
-                <td style={{ border: '1px solid black' }}>FEV1 (%pred)</td>
-                <td style={{ border: '1px solid black' }}>{lung.LUNG6}</td>
-              </tr>
-              <tr style={{ border: '1px solid black' }}>
-                <td style={{ border: '1px solid black' }}>FEV1/FVC (%)</td>
-                <td style={{ border: '1px solid black' }}>{lung.LUNG7}</td>
-              </tr>
-            </table>
-          </li>
-        ) : null}
-
         {!geriPHQ ? <p className='red'>nil geriPHQ data!</p> : <></>}
         <li>
           {geriPHQ && geriPHQ.PHQ10 ? (
@@ -413,8 +380,8 @@ const DoctorsConsultForm = () => {
           </li>
         ) : null}
 
-        {!geriVision ? <p className='red'>nil geriVision data!</p> : <></>}
-        {geriVision.geriVisionQ9 ? (
+        {!ophthal ? <p className='red'>nil ophthal data!</p> : <></>}
+        {ophthal.OphthalQ9 ? (
           <li>
             <p>Visual Check Results.</p>
             <ul>
@@ -435,33 +402,33 @@ const DoctorsConsultForm = () => {
                   </tr>
                   <tr style={{ border: '1px solid black' }}>
                     <td style={{ border: '1px solid black' }}>Without Pinhole Occluder</td>
-                    <td style={{ border: '1px solid black' }}>6/{geriVision.geriVisionQ3}</td>
-                    <td style={{ border: '1px solid black' }}>6/{geriVision.geriVisionQ4}</td>
+                    <td style={{ border: '1px solid black' }}>6/{ophthal.OphthalQ3}</td>
+                    <td style={{ border: '1px solid black' }}>6/{ophthal.OphthalQ4}</td>
                   </tr>
                   <tr style={{ border: '1px solid black' }}>
                     <td style={{ border: '1px solid black' }}>With Pinhole Occluder</td>
-                    <td style={{ border: '1px solid black' }}>6/{geriVision.geriVisionQ5}</td>
-                    <td style={{ border: '1px solid black' }}>6/{geriVision.geriVisionQ6}</td>
+                    <td style={{ border: '1px solid black' }}>6/{ophthal.OphthalQ5}</td>
+                    <td style={{ border: '1px solid black' }}>6/{ophthal.OphthalQ6}</td>
                   </tr>
                 </table>
               </li>
               <li>
                 <p>
-                  Type of vision error, if any: <strong>{geriVision.geriVisionQ8}</strong>
+                  Type of vision error, if any: <strong>{ophthal.OphthalQ8}</strong>
                 </p>
                 <p>
-                  Previous eye surgery or condition: <strong>{geriVision.geriVisionQ1}</strong>
+                  Previous eye surgery or condition: <strong>{ophthal.OphthalQ1}. {ophthal.OphthalQ2}</strong>
                 </p>
                 <p>
                   Is currently on any eye review/ consulting any eye specialist:{' '}
-                  <strong>{geriVision.geriVisionQ10}</strong>
+                  <strong>{ophthal.OphthalQ10}</strong>
                 </p>
                 <p>
-                  <strong>{geriVision.geriVisionQ11}</strong>
+                  <strong>{ophthal.OphthalQ11}</strong>
                 </p>
                 {hcsr ? (
                   <p>
-                    Patient&apos;s history indicated: <strong>{hcsr.hxHcsrQ3}</strong>
+                    Patient&apos;s history indication of hearing problems: <strong>{hcsr.hxHcsrQ3}</strong>
                   </p>
                 ) : (
                   <p className='red'>nil hcsr data!</p>
@@ -471,46 +438,25 @@ const DoctorsConsultForm = () => {
           </li>
         ) : null}
 
-        {!geriAudio ? <p className='red'>nil geriAudio data!</p> : <></>}
-        {geriAudio ? (
+        {!audio ? <p className='red'>nil audio data!</p> : <></>}
+        {audio ? (
           <li>
-            <p>Patient&apos;s audiometry results, if any:</p>
+            <p>Patient&apos;s audiometry results:</p>
             <ul>
               <li>
                 <p>
-                  <strong>{geriAudio.geriAudiometryQ13}</strong>
+                  <strong>{audio.AudiometryQ13}</strong>
                 </p>
                 <p>
-                  Details: <strong>{geriAudio.geriAudiometryQ12}</strong>
+                  Details: <strong>{audio.AudiometryQ12}</strong>
                 </p>
                 {hcsr ? (
                   <p>
-                    Patient&apos;s history indicated: <strong>{hcsr.hxHcsrQ4}</strong>
+                    Patient&apos;s indication of hearing problems: <strong>{hcsr.hxHcsrQ4}</strong>
                   </p>
                 ) : (
                   <p className='red'>nil hcsr data!</p>
                 )}
-              </li>
-            </ul>
-          </li>
-        ) : null}
-
-        {!osteo ? <p className='red'>nil osteo data!</p> : <></>}
-        {osteo ? (
-          <li>
-            <p>
-              Patient&apos;s OSTA risk is <strong>{osteo.BONE1}</strong>
-            </p>
-            <ul>
-              <li>
-                <p>
-                  FRAX Hip Fracture Score is <strong>{osteo.BONE3}</strong>
-                </p>
-              </li>
-              <li>
-                <p>
-                  Patient requires a follow up: <strong>{osteo.BONE2}</strong>
-                </p>
               </li>
             </ul>
           </li>

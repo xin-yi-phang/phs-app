@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as Yup from 'yup'
-import { Button, CircularProgress, Paper, Grid, Typography } from '@mui/material'
+import { Button, CircularProgress, Paper, Grid } from '@mui/material'
 import { Formik, Form, FastField } from 'formik'
 
 import { submitForm } from '../../api/api.jsx'
@@ -11,6 +11,7 @@ import allForms from '../forms.json'
 import '../fieldPadding.css'
 
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 
 const yesNo = [
   { label: 'Yes', value: 'Yes' },
@@ -75,7 +76,7 @@ const MentalHealthForm = () => {
       }}
       enableReinitialize={true}
     >
-      {({ handleSubmit, errors, submitCount, isValid }) => (
+      {({ errors, submitCount, isValid }) => (
         <Paper elevation={2}>
           <Grid display='flex' flexDirection='row'>
             <Grid xs={9}>
@@ -101,11 +102,10 @@ const MentalHealthForm = () => {
                     />
                   </div>
 
-                  {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-                    <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                      Please fill in all required fields correctly.
-                    </Typography>
-                  )}
+                  <ErrorNotification
+                    show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+                    message="Please fill in all required fields correctly."
+                  />
 
                   <div>
                     {loading ? (
@@ -144,6 +144,7 @@ const MentalHealthForm = () => {
                   )}
 
                   <p className='blue'>PHQ Score: {phq.PHQ10}</p>
+                  {phq.PHQ10 >= 6 ? <p className='red'>Patient meets the PHQ score threshold for referral to SAMH. Patient is recommended to sign up for follow up to SAMH.</p> : null}
                   <p className='underlined'>Would the patient benefit from counselling:</p>
                   <p className='blue'>{phq.PHQ11}</p>
                   <p className='blue'>{phq.PHQShortAns11}</p>

@@ -12,9 +12,7 @@ import { getSavedData } from '../services/mongoDB'
 import './fieldPadding.css'
 import CustomNumberField from '../components/form-components/CustomNumberField'
 import CustomRadioGroup from '../components/form-components/CustomRadioGroup'
-
-let calSyst
-let calDias
+import ErrorNotification from 'src/components/form-components/ErrorNotification'
 
 const validationSchema = Yup.object({
   triageQ1: Yup.number()
@@ -40,6 +38,7 @@ const validationSchema = Yup.object({
   triageQHR3: Yup.number().min(0, 'Value must be positive').nullable(),
   triageQ7: Yup.number().nullable(),
   triageQ8: Yup.number().nullable(),
+  triageQHRAvg: Yup.number().nullable(),
   triageQ9: Yup.string()
     .oneOf(['Yes', 'No'], 'Please select Yes or No')
     .required('This field is required'),
@@ -49,9 +48,7 @@ const validationSchema = Yup.object({
   triageQ13: Yup.number()
     .required('Waist circumference is required')
     .min(0, 'Value must be positive'),
-  triageQ14: Yup.number()
-    .required('Temperature is required')
-    .min(0, 'Value must be positive')
+  triageQ14: Yup.number().required('Temperature is required').min(0, 'Value must be positive'),
 })
 
 const initialValues = {
@@ -66,6 +63,7 @@ const initialValues = {
   triageQHR3: '',
   triageQ7: '',
   triageQ8: '',
+  triageQHRAvg: '',
   triageQ9: '',
   triageQ10: '',
   triageQ11: '',
@@ -97,58 +95,23 @@ function IsHighBP({ systolic, diastolic }) {
   )
 }
 
-function compareNumbers(a, b) {
-  return a - b
-}
-
-function CalcAvg({ reading1, reading2, reading3, label }) {
-  let ans
-
+function calculateAverage(reading1, reading2, reading3) {
   const num1 = parseFloat(reading1) || 0
   const num2 = parseFloat(reading2) || 0
-  const num3 = parseFloat(reading3) || null
+  const num3 = parseFloat(reading3)
 
   if (reading3 == null || reading3 === '') {
-    ans = Math.round((num1 + num2) / 2)
-    if (label == 1) {
-      calSyst = ans
-    } else {
-      calDias = ans
-    }
-    return ans
-  } else {
-    let diff1 = Math.abs(num1 - num2)
-    let diff2 = Math.abs(num1 - num3)
-    let diff3 = Math.abs(num3 - num2)
-
-    const diffArray = [diff1, diff2, diff3]
-
-    diffArray.sort(compareNumbers)
-
-    if (diffArray[0] == diff1) {
-      ans = Math.round((num1 + num2) / 2)
-      if (label == 1) {
-        calSyst = ans
-      } else {
-        calDias = ans
-      }
-    } else if (diffArray[0] == diff2) {
-      ans = Math.round((num1 + num3) / 2)
-      if (label == 1) {
-        calSyst = ans
-      } else {
-        calDias = ans
-      }
-    } else {
-      ans = Math.round((num2 + num3) / 2)
-      if (label == 1) {
-        calSyst = ans
-      } else {
-        calDias = ans
-      }
-    }
-    return ans
+    return Math.round((num1 + num2) / 2)
   }
+
+  const diffs = [
+    { diff: Math.abs(num1 - num2), pair: [num1, num2] },
+    { diff: Math.abs(num1 - num3), pair: [num1, num3] },
+    { diff: Math.abs(num2 - num3), pair: [num2, num3] },
+  ]
+
+  diffs.sort((a, b) => a.diff - b.diff)
+  return Math.round((diffs[0].pair[0] + diffs[0].pair[1]) / 2)
 }
 
 const formName = 'triageForm'
@@ -179,8 +142,9 @@ const TriageForm = () => {
     setSubmitting(true)
 
     //calculated values
-    model.triageQ7 = calSyst
-    model.triageQ8 = calDias
+    model.triageQ7 = calculateAverage(model.triageQ1, model.triageQ3, model.triageQ5)
+    model.triageQ8 = calculateAverage(model.triageQ2, model.triageQ4, model.triageQ6)
+    model.triageQHRAvg = calculateAverage(model.triageQHR1, model.triageQHR2, model.triageQHR3)
     model.triageQ12 = parseFloat(formatBmi(model.triageQ10, model.triageQ11).props.children)
 
     const response = await submitForm(model, patientId, formName)
@@ -214,10 +178,6 @@ const TriageForm = () => {
             <div className='form--div'>
               <h1>Triage</h1>
               <h2>VITALS</h2>
-              <h4>
-                Please fill in the participant&apos;s BP and BMI based on what you earlier recorded
-                on Form A and copy to <font color='red'>NUHS form too.</font>
-              </h4>
               <h2>1) BLOOD PRESSURE</h2>
               <p>
                 (Before measuring BP: ensure no caffeine, anxiety, running and smoking in the last
@@ -333,48 +293,29 @@ const TriageForm = () => {
               <h3>Average Reading Systolic (average of closest 2 readings):</h3>
               <h3>
                 Calculated Average: &nbsp;
-                <CalcAvg
-                  label={1}
-                  reading1={values.triageQ1}
-                  reading2={values.triageQ3}
-                  reading3={values.triageQ5}
-                />
+                {calculateAverage(values.triageQ1, values.triageQ3, values.triageQ5)}
               </h3>
               <br />
 
               <h3>Average Reading Diastolic (average of closest 2 readings):</h3>
               <h3>
                 Calculated Average: &nbsp;
-                <CalcAvg
-                  label={2}
-                  reading1={values.triageQ2}
-                  reading2={values.triageQ4}
-                  reading3={values.triageQ6}
-                />
+                {calculateAverage(values.triageQ2, values.triageQ4, values.triageQ6)}
               </h3>
               <br />
 
               <h3>Average Reading Heart Rate (average of closest 2 readings):</h3>
               <h3>
                 Calculated Average: &nbsp;
-                <CalcAvg
-                  label={2}
-                  reading1={values.triageQHR1}
-                  reading2={values.triageQHR2}
-                  reading3={values.triageQHR3}
-                />
+                {calculateAverage(values.triageQHR1, values.triageQHR2, values.triageQHR3)}
               </h3>
               <br />
 
               <h3>Hypertension criteria:</h3>
               <ul>
                 <li>Younger participants: BP &gt; 140/90</li>
-                <li>
-                  Participants &gt; 80 years old: BP &gt; 150/90
-                  <ul>
-                    <li>CKD w proteinuria (mod to severe albuminuria): &gt; 130/80</li>
-                  </ul>
-                </li>
+                <li>Participants &gt; 80 years old: BP &gt; 150/90</li>
+                <li>CKD w proteinuria (mod to severe albuminuria): &gt; 130/80</li>
                 <li>DM: &gt; 130/80</li>
               </ul>
 
@@ -382,7 +323,7 @@ const TriageForm = () => {
               <ul>
                 <li>BP &gt; 180/120</li>
               </ul>
-              <Typography fontWeight='bold' variant='h6'>
+              <Typography fontWeight='bold' variant='h4'>
                 Q9. Does the patient's blood pressure require closer scrutiny by doctors later?
                 (e.g. Systolic above 180/120)
               </Typography>
@@ -406,11 +347,11 @@ const TriageForm = () => {
                 BMI: <CalcBMI values={values} />
               </h3>
 
-              <h2>3) Waist Circumference (all participants)</h2>
+              <h2>3) Waist Circumference</h2>
               <h3>Waist Circumference (in cm)</h3>
               <Field name='triageQ13' component={CustomNumberField} label='Triage Q13' min={0} />
 
-              <h2>4) Temperature</h2>
+              <h2>4) Ear Temperature Taking</h2>
               <h3>Temperature (in Celsius)</h3>
               <Field
                 name='triageQ14'
@@ -422,11 +363,10 @@ const TriageForm = () => {
             </div>
 
             {/* Display form errors */}
-            {submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0 && (
-              <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                Please fill in all required fields correctly.
-              </Typography>
-            )}
+            <ErrorNotification
+              show={submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0}
+              message='Please fill in all required fields correctly.'
+            />
 
             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
               {loading || isSubmitting ? (

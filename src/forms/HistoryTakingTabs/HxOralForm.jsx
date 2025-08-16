@@ -1,11 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { Formik, Form, Field, FastField } from 'formik'
+import { Formik, Form, FastField } from 'formik'
 import * as Yup from 'yup'
-import { Paper, Divider, CircularProgress, TextField, Button, Typography } from '@mui/material'
+import { Paper, Divider, CircularProgress, Button, Typography } from '@mui/material'
 import { FormContext } from '../../api/utils.js'
 import { getSavedData } from '../../services/mongoDB'
 import { submitForm, checkFormA } from '../../api/api.jsx'
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
+import CustomTextField from '../../components/form-components/CustomTextField'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 import PopupText from '../../utils/popupText'
 
 const formName = 'hxOralForm'
@@ -32,7 +34,7 @@ const formOptions = {
   ORAL1: [
     { label: 'Healthy', value: 'Healthy' },
     { label: 'Moderate', value: 'Moderate' },
-    { label: 'Poor, please specify', value: 'Poor' },
+    { label: 'Poor (such as oral disease symptoms), please specify', value: 'Poor' },
   ],
   ORAL2: [
     { label: 'Yes', value: 'Yes' },
@@ -87,7 +89,7 @@ export default function HxOralForm({ changeTab, nextTab }) {
       enableReinitialize
       onSubmit={handleSubmit}
     >
-      {({ values, isSubmitting }) => (
+      {({ isSubmitting, errors, submitCount }) => (
         <Form className='fieldPadding'>
           <Typography variant='h4' gutterBottom>
             <strong>ORAL ISSUES</strong>
@@ -119,10 +121,10 @@ export default function HxOralForm({ changeTab, nextTab }) {
             <Typography variant='subtitle1' fontWeight='bold'>
               Please specify:
             </Typography>
-            <Field
+            <FastField
               name='ORALShortAns1'
-              as={TextField}
               label='ORALShortAns1'
+              component={CustomTextField}
               fullWidth
               multiline
               sx={{ mb: 3, mt: 1 }}
@@ -181,10 +183,10 @@ export default function HxOralForm({ changeTab, nextTab }) {
             <Typography variant='subtitle1' fontWeight='bold'>
               Please specify:
             </Typography>
-            <Field
+            <FastField
               name='ORALShortAns5'
-              as={TextField}
               label='ORALShortAns5'
+              component={CustomTextField}
               fullWidth
               multiline
               sx={{ mb: 3, mt: 1 }}
@@ -199,6 +201,11 @@ export default function HxOralForm({ changeTab, nextTab }) {
             <span style={{ color: 'red' }}>Please help to emphasise that: </span>
             screening DOES NOT take the place of a thorough oral health examination with a dentist.
           </Typography>
+
+          <ErrorNotification
+            show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+            message='Please fill in all required fields correctly.'
+          />
 
           <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
             {loading || isSubmitting ? (
@@ -217,9 +224,5 @@ export default function HxOralForm({ changeTab, nextTab }) {
     </Formik>
   )
 
-  return (
-    <Paper elevation={2}>
-      {renderForm()}
-    </Paper>
-  )
+  return <Paper elevation={2}>{renderForm()}</Paper>
 }

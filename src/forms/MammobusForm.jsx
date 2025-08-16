@@ -7,6 +7,7 @@ import * as Yup from 'yup'
 import { submitForm } from '../api/api.jsx'
 import { FormContext } from '../api/utils.js'
 import CustomRadioGroup from '../components/form-components/CustomRadioGroup.jsx'
+import ErrorNotification from '../components/form-components/ErrorNotification.jsx'
 import { getSavedData } from '../services/mongoDB.js'
 import './fieldPadding.css'
 import './forms.css'
@@ -37,6 +38,10 @@ const MammobusForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       const savedData = await getSavedData(patientId, formName)
+      const reg = await getSavedData(patientId, 'registrationForm')
+      if (reg?.registrationQ5 === 'Male') {
+        alert('This patient is not female. Are you sure you want to proceed with the HPV form?')
+      }
       setSavedData({ ...initialValues, ...savedData })
     }
     fetchData()
@@ -62,7 +67,7 @@ const MammobusForm = () => {
       enableReinitialize
       onSubmit={handleSubmit}
     >
-      {({ isSubmitting }) => (
+      {({ isSubmitting, errors, submitCount }) => (
         <Form className='fieldPadding'>
           <Typography variant='h4'>
             <strong>Mammobus</strong>
@@ -77,6 +82,12 @@ const MammobusForm = () => {
             options={formOptions.mammobusQ1}
             row
           />
+
+          <ErrorNotification 
+            show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+            message="Please fill in all required fields correctly."
+          />
+
           <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
             {loading || isSubmitting ? (
               <CircularProgress />

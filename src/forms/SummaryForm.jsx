@@ -17,6 +17,15 @@ const SummaryForm = (props) => {
   const [loadingPrevData, isLoadingPrevData] = useState(true)
   const [saveData, setSaveData] = useState({})
 
+  async function preloadFonts() {
+    const urls = [
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+      'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansTamil-Regular.ttf',
+      'https://cdn.jsdelivr.net/gh/choijiwonsoc/my-fonts@main/NotoSansSC-Regular.ttf',
+    ]
+    await Promise.all(urls.map(url => fetch(url)))
+  }
+
   // Oh my god this is terrible PLEASE SOMEONE FIX THIS
   // All the forms
   const [hcsr, setHcsr] = useState({})
@@ -51,6 +60,9 @@ const SummaryForm = (props) => {
   const [grace, setGrace] = useState({})
   const [hearts, setHearts] = useState({})
   const [mental, setMental] = useState({})
+  const [podiatry, setPodiatry] = useState({})
+  const [mammobus, setMammobus] = useState({})
+  const [hpv, setHpv] = useState({})
 
   const [refresh, setRefresh] = useState(false)
 
@@ -69,8 +81,8 @@ const SummaryForm = (props) => {
         const patientsData = getSavedPatientData(patientId, 'patients')
         const phlebotomyData = getSavedData(patientId, allForms.phlebotomyForm)
         const geriPtConsultData = getSavedData(patientId, allForms.geriPtConsultForm)
-        const geriVisionData = getSavedData(patientId, allForms.geriVisionForm)
-        const geriAudiometryData = getSavedData(patientId, allForms.geriAudiometryForm)
+        const geriVisionData = getSavedData(patientId, allForms.ophthalForm)
+        const geriAudiometryData = getSavedData(patientId, allForms.audiometryForm)
         const geriOtConsultData = getSavedData(patientId, allForms.geriOtConsultForm)
         const geriEbasDepData = getSavedData(patientId, allForms.geriEbasDepForm)
         const geriMmseData = getSavedData(patientId, allForms.geriMmseForm)
@@ -89,6 +101,9 @@ const SummaryForm = (props) => {
         const graceData = getSavedData(patientId, allForms.geriGraceForm)
         const heartsData = getSavedData(patientId, allForms.geriWhForm)
         const mentalData = getSavedData(patientId, allForms.mentalHealthForm)
+        const podiatryData = getSavedData(patientId, allForms.podiatryForm)
+        const mammobusData = getSavedData(patientId, allForms.mammobusForm)
+        const hpvData = getSavedData(patientId, allForms.hpvForm)
 
         Promise.all([
           hcsrData,
@@ -119,7 +134,10 @@ const SummaryForm = (props) => {
           hsgData,
           graceData,
           heartsData,
-          mentalData
+          mentalData,
+          podiatryData,
+          mammobusData,
+          hpvData,
           //sacsData,
         ]).then((result) => {
           setHcsr(result[0])
@@ -151,11 +169,15 @@ const SummaryForm = (props) => {
           setGrace(result[26])
           setHearts(result[27])
           setMental(result[28])
+          setPodiatry(result[29])
+          setMammobus(result[30])
+          setHpv(result[31])
           //setSacs(result[])
           isLoadingPrevData(false)
         })
       }
       await loadPastForms()
+      await preloadFonts()
     }
     loadForms()
   }, [refresh])
@@ -195,7 +217,10 @@ const SummaryForm = (props) => {
                   geriPtConsult,
                   geriOtConsult,
                   mental,
-                  social
+                  social,
+                  podiatry,
+                  mammobus,
+                  hpv,
                 )
               }
             >

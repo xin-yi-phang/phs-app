@@ -28,6 +28,8 @@ import {
 } from '../services/stationCounts'
 import { generateFormAPdf } from '../api/api.jsx'
 
+// Eligibility page
+
 function Eligibility() {
   const { patientId } = useContext(FormContext)
   const [forms, setForms] = useState(null)
@@ -40,7 +42,7 @@ function Eligibility() {
     const loadAndCompute = async () => {
       isLoadingPrevData(true)
       const [
-        pmhx, hxsocial, reg, hxfamily, triage, hcsr, hxoral, wce, phq, hxm4m5, hxgynae
+        pmhx, hxsocial, reg, hxfamily, triage, hcsr, hxoral, wce, phq, hxm4m5, hxgynae, ophthal
       ] = await Promise.all([
         getSavedData(patientId, allForms.hxNssForm),
         getSavedData(patientId, allForms.hxSocialForm),
@@ -52,7 +54,8 @@ function Eligibility() {
         getSavedData(patientId, allForms.wceForm),
         getSavedData(patientId, allForms.geriPhqForm),
         getSavedData(patientId, allForms.hxM4M5ReviewForm),
-        getSavedData(patientId, allForms.hxGynaeForm)
+        getSavedData(patientId, allForms.hxGynaeForm),
+        getSavedData(patientId, allForms.ophthalForm)
       ])
       isLoadingPrevData(false)
 
@@ -68,6 +71,7 @@ function Eligibility() {
         phq: phq || {},
         hxm4m5: hxm4m5 || {},
         hxgynae: hxgynae || {},
+        ophthal: ophthal || {},
       }
 
       setForms(formData)

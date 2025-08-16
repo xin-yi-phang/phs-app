@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { Paper, Divider, Typography, CircularProgress, Box, Button } from '@mui/material'
+import { useContext, useEffect, useState } from 'react'
+import { Paper, CircularProgress, Button } from '@mui/material'
 import { Formik, Form, FastField } from 'formik'
 import * as Yup from 'yup'
 import { submitForm } from '../../api/api.jsx'
@@ -10,6 +10,7 @@ import '../forms.css'
 
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup.jsx'
 import CustomTextField from '../../components/form-components/CustomTextField.jsx'
+import ErrorNotification from '../../components/form-components/ErrorNotification.jsx'
 
 import PopupText from 'src/utils/popupText'
 import { useNavigate } from 'react-router'
@@ -24,7 +25,7 @@ const validationSchema = Yup.object({
 
 const formName = 'geriGraceForm'
 
-const GeriGraceForm = (props) => {
+const GeriGraceForm = () => {
   const { patientId } = useContext(FormContext)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
@@ -67,7 +68,7 @@ const GeriGraceForm = (props) => {
           setLoading(false)
           setSubmitting(false)
           if (response.result) {
-            const event = null
+            //const event = null
             setTimeout(() => {
               alert('Successfully submitted form')
               navigate('/app/dashboard', { replace: true })
@@ -79,7 +80,7 @@ const GeriGraceForm = (props) => {
           }
         }}
       >
-        {(formikProps, handleSubmit, errors, submitCount) => {
+        {(formikProps) => {
           return (
             <Form className='fieldPadding'>
               <div className='form--div'>
@@ -135,11 +136,10 @@ const GeriGraceForm = (props) => {
                 </PopupText>
               </div>
 
-              {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-                <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                  Please fill in all required fields correctly.
-                </Typography>
-              )}
+              <ErrorNotification 
+                show={formikProps.submitCount > 0 && Object.keys(formikProps.errors || {}).length > 0}
+                message="Please fill in all required fields correctly."
+              />
 
               <div>
                 {loading ? (

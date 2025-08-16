@@ -1,11 +1,11 @@
 import React from 'react'
 import { Fragment, useContext, useEffect, useState } from 'react'
-import { Formik, Form, useFormikContext, Field } from 'formik'
+import { Formik, useFormikContext, Field } from 'formik'
 import * as Yup from 'yup'
 
-import { Divider, Paper, Grid, CircularProgress, Button, Typography } from '@mui/material'
+import { Divider, Paper, Grid, CircularProgress, Button } from '@mui/material'
 
-import { submitForm, submitFormSpecial } from '../../api/api.jsx'
+import { submitForm } from '../../api/api.jsx'
 import { FormContext } from '../../api/utils.js'
 
 import { getSavedData } from '../../services/mongoDB'
@@ -13,6 +13,7 @@ import '../fieldPadding.css'
 import allForms from '../forms.json'
 
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 
 const formName = 'wceForm'
 
@@ -27,61 +28,16 @@ const formOptions = {
     { label: 'No', value: 'No' },
     { label: 'Not Applicable', value: 'Not Applicable' },
   ],
-  wceQ5: [
-    { label: 'Yes', value: 'Yes' },
-    { label: 'No', value: 'No' },
-    { label: 'Not Applicable', value: 'Not Applicable' },
-  ],
-  wceQ7: [
-    { label: 'Yes', value: 'Yes' },
-    { label: 'No', value: 'No' },
-  ],
-  wceQ8: [
-    { label: 'Never before', value: 'Never before' },
-    { label: 'Less than 5 years', value: 'Less than 5 years' },
-    { label: '5 years or longer', value: '5 years or longer' },
-  ],
-  wceQ9: [
-    { label: 'Yes', value: 'Yes' },
-    { label: 'No', value: 'No' },
-  ],
-  wceQ10: [
-    { label: 'Yes', value: 'Yes' },
-    { label: 'No', value: 'No' },
-  ],
-  wceQ11: [
-    { label: 'Never before', value: 'Never before' },
-    { label: 'Within the last 3 years', value: 'Within the last 3 years' },
-    { label: '3 years or longer', value: '3 years or longer' },
-  ],
-  wceQ12: [
-    { label: 'Yes', value: 'Yes' },
-    { label: 'No', value: 'No' },
-  ],
 }
 
 const validationSchema = Yup.object({
   wceQ3: Yup.string().required(),
   wceQ4: Yup.string().required(),
-  wceQ5: Yup.string().required(),
-  wceQ7: Yup.string().required(),
-  wceQ8: Yup.string().required(),
-  wceQ9: Yup.string().required(),
-  wceQ10: Yup.string().required(),
-  wceQ11: Yup.string().required(),
-  wceQ12: Yup.string().required(),
 })
 
 const initialValues = {
   wceQ3: '',
   wceQ4: '',
-  wceQ5: '',
-  wceQ7: '',
-  wceQ8: '',
-  wceQ9: '',
-  wceQ10: '',
-  wceQ11: '',
-  wceQ12: '',
 }
 
 // HPV Eligibility Checker Component
@@ -180,8 +136,8 @@ const WceForm = (props) => {
       {({ handleSubmit, errors, submitCount }) => (
         <Paper elevation={2} p={0} m={0}>
           <Grid display='flex' flexDirection='row'>
-            <Grid xs={9}>
-              <Paper elevation={2} p={0} m={0}>
+            <Grid xs={9} width='50%'>
+              <Paper>
                 <form onSubmit={handleSubmit} className='fieldPadding'>
                   <div className='form--div'>
                     <h1>WCE</h1>
@@ -202,90 +158,16 @@ const WceForm = (props) => {
                       component={CustomRadioGroup}
                     />
 
-                    <h3>
-                      When, if any, was the last hpv test you have taken? (Please verify on health
-                      hub) (HPV is different from Pap Smear, answer Pap Smear in the next question)
-                    </h3>
-                    <Field
-                      name='wceQ8'
-                      label='WCE Q8'
-                      options={formOptions.wceQ8}
-                      component={CustomRadioGroup}
-                    />
-
-                    <h3>
-                      When if any, was the last Pap Smear test you have taken? (Please verify on
-                      health hub)
-                    </h3>
-                    <Field
-                      name='wceQ11'
-                      label='WCE Q11'
-                      options={formOptions.wceQ11}
-                      component={CustomRadioGroup}
-                    />
-
-                    <h3>
-                      I am asking the next few questions to check your eligibility for a Pap Smear.
-                      This question may be sensitive, but could I ask if you have engaged in sexual
-                      intercourse before?
-                    </h3>
-                    <Field
-                      name='wceQ9'
-                      label='WCE Q9'
-                      options={formOptions.wceQ9}
-                      component={CustomRadioGroup}
-                    />
-
-                    <h3>Are you pregnant?</h3>
-                    <Field
-                      name='wceQ10'
-                      label='WCE Q10'
-                      options={formOptions.wceQ10}
-                      component={CustomRadioGroup}
-                    />
-
-                    <h3>
-                      Was your last menstrual period within the window where the first day falls
-                      between 28 July and 4 August 2025? If you are post-menopausal or use
-                      contraception, please indicate &apos;yes&apos;
-                    </h3>
-                    <Field
-                      name='wceQ12'
-                      label='WCE Q12'
-                      options={formOptions.wceQ12}
-                      component={CustomRadioGroup}
-                    />
-
-                    <h3>Indicated interest for HPV Test under SCS?</h3>
-                    <Field
-                      name='wceQ5'
-                      label='WCE Q5'
-                      options={formOptions.wceQ5}
-                      component={CustomRadioGroup}
-                    />
-
-                    <h3>
-                      Is patient indicated for on-site testing? Please circle On-Site Testing on
-                      Form A as well
-                    </h3>
-                    <Field
-                      name='wceQ7'
-                      label='WCE Q7'
-                      options={formOptions.wceQ7}
-                      component={CustomRadioGroup}
-                    />
-
                     <h3>HPV Test Eligibility</h3>
                     <CheckHpvEligibility />
                   </div>
 
-                  {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-                    <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                      Please fill in all required fields correctly.
-                    </Typography>
-                  )}
+                  <ErrorNotification 
+                    show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+                    message="Please fill in all required fields correctly."
+                  />
 
-                  <div style={{ paddingLeft: '16px', paddingBottom: '16px' }}>
+                  <div>
                     {loading ? (
                       <CircularProgress />
                     ) : (
@@ -294,15 +176,13 @@ const WceForm = (props) => {
                       </Button>
                     )}
                   </div>
-
-                  <br />
-                  <Divider />
                 </form>
               </Paper>
             </Grid>
+
             <Grid
               p={1}
-              width='30%'
+              width='40%'
               display='flex'
               flexDirection='column'
               alignItems={loadingSidePanel ? 'center' : 'left'}
@@ -336,9 +216,7 @@ const WceForm = (props) => {
                   )}
                   {hxSocial && hxSocial.SOCIALShortAns3 ? (
                     <p className='blue'>{hxSocial.SOCIALShortAns3}</p>
-                  ) : (
-                    <p className='blue'>nil</p>
-                  )}
+                  ) : null}
 
                   <h2>Family History</h2>
                   <p className='underlined'>
@@ -346,14 +224,12 @@ const WceForm = (props) => {
                     <span className='red'>(AMONG FIRST DEGREE RELATIVES)</span> for the following
                     cancers?:
                   </p>
-                  {hxFamily && hxFamily.FAMILY1 ? (
-                    <p className='blue'>{hxFamily.FAMILY1}</p>
-                  ) : (
-                    <p className='blue'>nil</p>
-                  )}
-                  <p className='underlined'>Age of diagnosis:</p>
-                  {hxFamily && hxFamily.FAMILYShortAns1 ? (
-                    <p className='blue'>{hxFamily.FAMILYShortAns1}</p>
+                  {hxFamily && Array.isArray(hxFamily.FAMILY2) && hxFamily.FAMILY2.length > 0 ? (
+                    hxFamily.FAMILY2.map((item, idx) => (
+                      <p className='blue' key={idx}>
+                        {item}
+                      </p>
+                    ))
                   ) : (
                     <p className='blue'>nil</p>
                   )}

@@ -16,6 +16,7 @@ import PopupText from 'src/utils/popupText'
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup'
 import CustomTextField from '../../components/form-components/CustomTextField'
 import CustomCheckboxGroup from '../../components/form-components/CustomCheckboxGroup'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 
 const formName = 'geriOtConsultForm'
 
@@ -38,27 +39,14 @@ const formOptions = {
 
 const validationSchema = Yup.object({
   geriOtConsultQ1: Yup.string().required(),
-  geriOtConsultQ2: Yup.string()
-    .required()
-    .oneOf(formOptions.geriOtConsultQ2.map((opt) => opt.value))
-    .required(),
+  geriOtConsultQ2: Yup.string().required(),
   geriOtConsultQ3: Yup.string(),
-  geriOtConsultQ4: Yup.string()
-    .oneOf(formOptions.geriOtConsultQ4.map((opt) => opt.value))
-    .required(),
+  geriOtConsultQ4: Yup.string().required(),
   geriOtConsultQ5: Yup.string(),
-  geriOtConsultQ6: Yup.array().of(
-    Yup.string().oneOf(formOptions.geriOtConsultQ6.map((opt) => opt.value)),
-  ),
-  geriOtConsultQ7: Yup.string()
-    .required()
-    .oneOf(formOptions.geriOtConsultQ7.map((opt) => opt.value)),
-  geriOtConsultQ8: Yup.string()
-    .required()
-    .oneOf(formOptions.geriOtConsultQ8.map((opt) => opt.value)),
-  geriOtConsultQ9: Yup.string()
-    .required()
-    .oneOf(formOptions.geriOtConsultQ9.map((opt) => opt.value)),
+  geriOtConsultQ6: Yup.array().of(Yup.string()),
+  geriOtConsultQ7: Yup.string().required(),
+  geriOtConsultQ8: Yup.string().required(),
+  geriOtConsultQ9: Yup.string().required(),
 })
 
 function GetSppbScore(q2, q6, q8) {
@@ -204,7 +192,7 @@ const GeriOtConsultForm = () => {
                       name='geriOtConsultQ6'
                       label='Recommended programme(s)'
                       component={CustomCheckboxGroup}
-                      options={formOptions.geriOtConsultQ6.map((o) => o.value)}
+                      options={formOptions.geriOtConsultQ6}
                     />
                     <h3>HDB EASE</h3>
                     <p className='remove-bottom-margin'>
@@ -250,11 +238,10 @@ const GeriOtConsultForm = () => {
                     />
                   </div>
 
-                  {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-                    <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                      Please fill in all required fields correctly.
-                    </Typography>
-                  )}
+                  <ErrorNotification 
+                    show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+                    message="Please fill in all required fields correctly."
+                  />
 
                   <div>
                     {loading ? (

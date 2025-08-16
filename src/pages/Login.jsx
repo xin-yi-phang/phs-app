@@ -283,6 +283,22 @@ const Login = () => {
                   </Button>
                 </Box>
 
+                {/* Reset Password only for Sign In and Admin */}
+                {!isSignUp && accountOption === accountOptions[1] && (
+                  <Button
+                    color='primary'
+                    fullWidth
+                    size='large'
+                    type='button'
+                    variant='contained'
+                    onClick={() => {
+                      handleReset(values)
+                    }}
+                  >
+                    Reset Password
+                  </Button>
+                )}
+                
                 {/* Toggle between Sign In and Sign Up */}
                 <Box sx={{ textAlign: 'center', mt: 2 }}>
                   {!isSignUp ? (
@@ -303,22 +319,7 @@ const Login = () => {
                     </Link>
                   )}
                 </Box>
-
-                {/* Reset Password only for Sign In and Admin */}
-                {!isSignUp && accountOption === accountOptions[1] && (
-                  <Button
-                    color='primary'
-                    fullWidth
-                    size='large'
-                    type='button'
-                    variant='contained'
-                    onClick={() => {
-                      handleReset(values)
-                    }}
-                  >
-                    Reset Password
-                  </Button>
-                )}
+                
               </form>
             )}
           </Formik>

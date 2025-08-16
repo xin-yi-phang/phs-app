@@ -1,4 +1,4 @@
-import { Divider, Paper, CircularProgress, Button, Grid, Typography } from '@mui/material'
+import { Divider, Paper, CircularProgress, Button, Grid } from '@mui/material'
 import { FastField, Form, Formik } from 'formik'
 import React, { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -13,6 +13,7 @@ import PopupText from 'src/utils/popupText'
 import CustomRadioGroup from '../components/form-components/CustomRadioGroup'
 import CustomTextField from '../components/form-components/CustomTextField'
 import CustomCheckboxGroup from '../components/form-components/CustomCheckboxGroup'
+import ErrorNotification from '../components/form-components/ErrorNotification'
 
 const YesNo = [
   { value: 'Yes', label: 'Yes' },
@@ -83,7 +84,8 @@ const AudiometryForm = () => {
   const [pmhx, setPMHX] = useState({})
   const [loading, setLoading] = useState(false)
   const [loadingSidePanel, setLoadingSidePanel] = useState(true)
-  const [dataLoaded, setDataLoaded] = useState(false)
+  // const [dataLoaded, setDataLoaded] = useState(false)
+  const [setDataLoaded] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -284,11 +286,10 @@ const AudiometryForm = () => {
                     />
                   </div>
 
-                  {submitCount > 0 && Object.keys(errors || {}).length > 0 && (
-                    <Typography color='error' variant='body2' sx={{ mb: 1 }}>
-                      Please fill in all required fields correctly.
-                    </Typography>
-                  )}
+                  <ErrorNotification 
+                    show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+                    message="Please fill in all required fields correctly."
+                  />
 
                   <div>
                     {loading ? (

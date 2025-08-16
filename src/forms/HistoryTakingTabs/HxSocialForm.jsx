@@ -8,6 +8,7 @@ import { submitForm, checkFormA } from '../../api/api.jsx'
 import CustomTextField from '../../components/form-components/CustomTextField'
 import CustomRadioGroup from '../../components/form-components/CustomRadioGroup.jsx'
 import CustomNumberField from 'src/components/form-components/CustomNumberField.jsx'
+import ErrorNotification from '../../components/form-components/ErrorNotification'
 import PopupText from 'src/utils/popupText.jsx'
 
 const formName = 'hxSocialForm'
@@ -47,7 +48,21 @@ const validationSchema = Yup.object({
   SOCIAL7: Yup.string().required('Required'),
   SOCIAL8: Yup.string().required('Required'),
   SOCIAL10: Yup.string().required('Required'),
-  SOCIAL11: Yup.string().required('Required'),
+  SOCIAL10Years: Yup.number().when('SOCIAL10', {
+    is: 'Yes',
+    then: (schema) => schema.required('Required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  SOCIAL10Packs: Yup.number().when('SOCIAL10', {
+    is: 'Yes',
+    then: (schema) => schema.required('Required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  SOCIAL11: Yup.string().when('SOCIAL10', {
+    is: 'No',
+    then: (schema) => schema.required('Required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   SOCIAL12: Yup.string().required('Required'),
   SOCIAL13: Yup.string().required('Required'),
   SOCIAL14: Yup.string().required('Required'),
@@ -106,8 +121,8 @@ const formOptions = {
     { label: '2 or more servings/day', value: '2 or more servings/day' },
   ],
   SOCIAL13C: [
-    { label: 'Yes', value: 'Yes' },
-    { label: 'No', value: 'No' },
+    { label: '1 serving/day', value: '1 serving/day' },
+    { label: '2 or more servings/day', value: '2 or more servings/day' },
   ],
   SOCIAL14: [
     {
@@ -186,7 +201,7 @@ export default function HxSocialForm({ changeTab, nextTab }) {
       enableReinitialize
       onSubmit={handleSubmit}
     >
-      {({ isSubmitting }) => (
+      {({ isSubmitting, errors, submitCount }) => (
         <Form className='fieldPadding'>
           <Typography variant='h4'>
             <strong>FINANCIAL STATUS</strong>
@@ -245,7 +260,7 @@ export default function HxSocialForm({ changeTab, nextTab }) {
           />
 
           <Typography fontWeight='bold'>
-            If you are currently not on CHAS but qualify, do you want to apply for CHAS card?
+            If you are currently not on CHAS but qualify, do you want to apply for CHAS card? <br/>For SG PRs, they do not qualify. Select 'No' if patient is a PR.
           </Typography>
           <FastField
             name='SOCIAL6'
@@ -377,16 +392,18 @@ export default function HxSocialForm({ changeTab, nextTab }) {
             </PopupText>
           </PopupText>
 
-
           <Typography>
-            For the next question:<br />
+            For the next question:
+            <br />
             Appropriate amount of alcohol:
             <ul>
               <li> Males: &lt;2 standard drinks per day</li>
               <li> Females: &lt;1 standard drink per day</li>
             </ul>
           </Typography>
-          <Typography fontWeight='bold' sx={{ mt: 2 }}>Do you consume alcoholic drinks?</Typography>
+          <Typography fontWeight='bold' sx={{ mt: 2 }}>
+            Do you consume alcoholic drinks?
+          </Typography>
           <FastField name='SOCIAL12' label='SOCIAL12' component={CustomTextField} />
 
           <Typography fontWeight='bold'>
@@ -453,6 +470,20 @@ export default function HxSocialForm({ changeTab, nextTab }) {
             row
           />
 
+          <Typography fontWeight='bold'>Dietician consultation criteria:</Typography>
+          <ul>
+            <li>interested in dietary advice</li>
+            <li>Any chronic metabolic diseases that will benefit from dietetic intervention</li>
+            <ul>
+              <li>Diabetes</li>
+              <li>Hyperlipidemia</li>
+              <li>Hypertension</li>
+            </ul>
+            <li>Obesity cases (BMI &gt; 23.0 kg/m^2)</li>
+            <li>Underweight cases (BMI &lt; 18.0 kg/m^2)</li>
+            <li>Any other metabolic imbalance</li>
+          </ul>
+
           <Typography fontWeight='bold'>
             Have you visited any GP or polyclinic in the last 1 year?
           </Typography>
@@ -462,6 +493,11 @@ export default function HxSocialForm({ changeTab, nextTab }) {
             component={CustomRadioGroup}
             options={formOptions.SOCIAL16}
             row
+          />
+
+          <ErrorNotification
+            show={submitCount > 0 && Object.keys(errors || {}).length > 0}
+            message='Please fill in all required fields correctly.'
           />
 
           <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
